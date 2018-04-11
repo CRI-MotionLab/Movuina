@@ -1,0 +1,25 @@
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1">
+
+  <title> <%= data.title %> </title>
+
+  <% for (var i = 0; i < data.styles.length; i++) { %>
+  <link
+    rel="stylesheet"
+    type="text/css"
+    href="<%= `${relPath}css/${data.styles[i]}.css` %>">
+  <% } %>
+
+  <% for (var i = 0; i < data.scripts.length; i++) {
+        var fullName = `${relPath}js/${data.scripts[i]}/index`;
+        if (config.minify) fullName += '.min.js';
+        else fullName += '.js'; %>
+  <script
+    type="text/javascript"
+    src="<%= fullName %>">
+  </script>
+  <% } %>
+
+</head>

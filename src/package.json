@@ -1,0 +1,6 @@
+{
+  "name": "movuinhub",
+  "version": "0.0.1",
+  "description": "hub application for movuino sensors and more",
+  "main": "app/main.js"
+}

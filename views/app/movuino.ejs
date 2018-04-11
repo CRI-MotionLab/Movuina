@@ -1,0 +1,114 @@
+<div id="movuino">
+
+  <div id="logo-container" class="section-container">
+    <div> <img class="movuino-logo"> </div>
+  </div>
+
+  <div id="serialports-container" class="section-container">
+    <div> <img class="usb-logo"> </div>
+
+    <div> <h2> Serial connection (USB) </h2> </div>
+
+    <div id="serialports-menu-container">
+      <div> <span>
+        <div class="inline reset">
+          <button id="refresh-serialports-menu"></button>
+        </div>
+
+        <div class="menu-wrapper dark-blue inline reset">
+          <select id="serialports-menu">
+            <option>Available ports</option>
+          </select>
+        </div>
+
+        <label class="bad">
+          Movuino not found
+        </label>
+      </span> </div>
+    </div>
+  </div>
+
+  <div id="wifi-configuration-container" class="section-container">
+    <div>
+      <h1> Wifi configuration </h1>
+    </div>
+
+    <div id="wifi-configuration-network" class="section-subcontainer">
+      <div id="wifi-configuration-network-info">
+        <div class="inline">
+          <div> Wifi name (SSID) </div>
+          <input type="text">
+        </div>
+        <div class="inline">
+          <div> Wifi password </div>
+          <input type="password">
+        </div>
+        <div class="inline">
+          <div> IP address of your computer </div>
+          <input type="number" class="ip">
+          .
+          <input type="number" class="ip">
+          .
+          <input type="number" class="ip">
+          .
+          <input type="number" class="ip">
+        </div>
+      </div>
+
+      <div id="wifi-configuration-network-refresh">
+        <button id="refresh-wifi-connection-btn" class="blue-rounded">
+          Refresh connection
+        </button>
+      </div>
+
+      <div id="wifi-configuration-network-disconnect">
+        <button id="wifi-disconnect-btn" class="circle bad"></button>
+        <label class="bad"> Disconnect from Wifi </label>
+      </div>
+    </div>
+
+    <div id="wifi-configuration-movuino" class="section-subcontainer">
+      <div id="wifi-configuration-movuino-sensors">
+        <div class="inline third">
+          <!-- <canvas id="movuino-accelerometers" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-accelerometers"></canvas>
+          </div>
+          <div class="subtle">Accelerometer</div>
+        </div>
+        <div class="inline third">
+          <!-- <canvas id="movuino-gyroscopes" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-gyroscopes"></canvas>
+          </div>
+          <div class="subtle">Gyroscope</div>
+        </div>
+        <div class="inline third">
+          <!-- <canvas id="movuino-magnetometers" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-magnetometers"></canvas>
+          </div>
+          <div class="subtle">Magnetometer</div>
+        </div>
+      </div>
+
+      <div id="wifi-configuration-movuino-get-ip">
+        <button id="get-movuino-ip-btn" class="blue-rounded">
+          Get Movuino IP address
+        </button>
+      </div>
+
+      <div id="wifi-configuration-movuino-ip">
+        <input type="number" class="ip" disabled>
+        .
+        <input type="number" class="ip" disabled>
+        .
+        <input type="number" class="ip" disabled>
+        .
+        <input type="number" class="ip" disabled>
+      </div>
+    </div>
+
+  </div>
+
+</div> <!-- movuino -->

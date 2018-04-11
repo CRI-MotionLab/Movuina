@@ -1,0 +1,485 @@
+//============================== VARIABLES ===================================//
+
+$lightYellow: #fff17a;
+$lightBlue: #7cdde2;
+$lightRed: #f45a54;
+
+$darkBlue: #4951D0;
+$darkBlueShadow: #2f36a7;
+
+$darkGrey: #aaa;
+
+$blueRoundedButtonFontSize: 14px;
+
+$mediaPath: '../images/';
+
+$movuinoLogoPath: $mediaPath + 'Logo_Movuino_02-01.png';
+$usbIconPath: $mediaPath + 'Icon_USB.png';
+$menuArrowPath: $mediaPath + 'Menu_Arrow_Square.png';
+$refreshIconPath: $mediaPath + 'Icon_Refresh_cropped.png';
+$blueDownArrowPath: $mediaPath + 'Icon_Arrow1-01.png';
+$whiteUpArrowPath: $mediaPath + 'Icon_Arrow2-01.png';
+$whiteDownArrowPath: $mediaPath + 'Icon_Arrow2-02.png';
+$blueUpArrowPath: $mediaPath + 'Icon_Arrow1-02.png';
+
+$fontFamily: LatoLatinoWeb, "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+//======================== MOVUINO INTERFACE STYLE ===========================//
+
+html, body, h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: normal;
+  color: #fff;
+}
+
+html {
+  width: 100%;
+  height: 100%;
+  font-size: 0.8em;
+  font-family: $fontFamily;
+}
+
+body {
+  min-height: 100%;
+  user-select: none;
+}
+
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  margin: 0;
+  padding: 5px;
+  font-size: 1em;
+  color: #fff;
+  background: transparent;
+}
+
+label.bad {
+  color: #f00;
+}
+
+label.good {
+  color: #0f0;
+}
+
+button.bad {
+  background-color: #f00;
+  box-shadow: inset -2px -2px 12px #d00;
+}
+
+button.bad:active {
+  box-shadow: inset 2px 2px 12px #d00;
+}
+
+button.good {
+  background-color: #0e0;
+  box-shadow: inset -2px -2px 12px #0d0;
+}
+
+button.good:active {
+  box-shadow: inset 2px 2px 12px #0d0;
+}
+
+button, select {
+  cursor: pointer;
+}
+
+button, span, select {
+  vertical-align: middle;
+}
+
+/* adjust colors here : http://doc.instantreality.org/tools/color_calculator/ */
+
+button.blue-rounded {
+  border: 0;
+  border-radius: 50px;
+  padding: 10px;
+  font-size: 14px;
+  color: #fff;
+  background-color: $darkBlue;
+  box-shadow: inset -2px -2px 12px $darkBlueShadow;
+}
+
+button.blue-rounded:active {
+  box-shadow: inset 2px 2px 12px $darkBlueShadow;
+}
+
+button.circle {
+  border: 0;
+  border-radius: 30px;
+  padding: 10px;
+}
+
+button.blue-yellow-squared-toggle {
+  width: 100px;
+  border: 0;
+  border-radius: 0;
+  padding: 8px;
+  font-size: 12px;
+  color: $lightYellow;
+  background-color: $darkBlue;
+}
+
+button.blue-yellow-squared-toggle.active {
+  color: $darkBlue;
+  background-color: $lightYellow;
+}
+
+button:focus, select:focus, input:focus {
+  outline: 0;
+}
+
+canvas {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100px;
+}
+
+input[type="text"], input[type="password"], input[type="number"] {
+  border: 0;
+  box-shadow: 0px 0px 0px;
+  background-color: #eee;
+  width: 100%;
+}
+
+ /* found here : */
+ /* https://stackoverflow.com/questions/3790935/can-i-hide-the-html5-number-input-s-spin-box */
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+div#main {
+  padding: 10px;
+  position: relative;
+  height: 100%;
+  min-height: 100%;
+  background-color: #fff;
+  text-align: center;
+}
+
+div#movuino, div#computer {
+  padding: 20px;
+  background-color: $darkBlue;
+}
+
+
+div.inline {
+  width: auto;
+  display: inline-block;
+}
+
+div.inline div {
+  display: block;
+}
+
+div.reset {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+div.subtle {
+  margin: 2px !important;
+  padding: 2px !important;
+}
+
+div.third {
+  display: inline-block !important;
+  /*overflow: hidden;*/
+  padding: 0 !important;
+  padding-top: 10px !important;
+  width: 30%;
+}
+
+div.thin {
+  padding: 0 !important;
+  margin: 0 auto;
+  max-width: 100px;
+}
+
+div#movuino {
+
+  img.movuino-logo {
+    width: 200px;
+    height: 200px;
+    content: url($movuinoLogoPath);
+  }
+
+  img.usb-logo {
+    width: 54px;
+    height: 32px;
+    content: url($usbIconPath);
+  }
+}
+
+
+
+/* tricks found here : */
+/* https://codepen.io/ericrasch/pen/zjDBx */
+
+div.menu-wrapper {
+  padding-right: 30px !important;
+  display: inline-block;
+  background: url($menuArrowPath) no-repeat right top;
+  background-size: 30px 100%;
+}
+
+div.dark-blue {
+  background-color: $darkBlue;
+  // box-shadow: inset -2px -2px 12px $darkBlueShadow;
+}
+
+div.dark-grey {
+  background-color: $darkGrey;
+}
+
+/*//////////////////////*/
+
+div.dimension-label {
+  /*display: flex !important;*/
+  display: inline-block !important;
+  width: 75% !important;
+  padding: 2px !important;
+  /*padding: 0 !important;*/
+  overflow: hidden;
+}
+
+div.light-yellow {
+  color: #fff;
+  background-color: $lightYellow;
+}
+
+div.light-blue {
+  color: #fff;
+  background-color: $lightBlue;
+}
+
+div.light-red {
+  color: #fff;
+  background-color: $lightRed;
+}
+
+/*//////////////////////*/
+
+div.section-container {
+  padding: 10px;
+}
+
+div.section-container div {
+  padding: 10px;
+}
+
+div.section-flex {
+  display: flex;
+  padding: 0 !important;
+  /*flex-direction: column;*/
+  /*justify-content: center;*/
+  /*height: 100%;*/
+}
+
+div.section-subcontainer {
+  background-color: #fff;
+  margin: 10px;
+}
+
+div.section-subcontainer h1,
+div.section-subcontainer h2,
+div.section-subcontainer h3,
+div.section-subcontainer h4,
+div.section-subcontainer h5,
+div.section-subcontainer h6 {
+  color: $darkBlue;
+}
+
+/* SERIAL PORT */
+
+button#refresh-serialports-menu {
+  padding: 0;
+  border: 0;
+  border-radius: 25px;
+  width: 50px;
+  height: 50px;
+  background: url($refreshIconPath);
+  background-size: 50px 50px;
+  transition: 1000ms;
+  transform: rotate(0deg);
+}
+
+button#refresh-serialports-menu:active {
+  transition: 150ms;
+  transform: rotate(180deg);
+}
+
+div#serialports-menu-container {
+  padding: 0;
+  margin: 0;
+  display: inline-block;
+  border-radius: 50px;
+  background-color: #fff;
+}
+
+div#serialports-menu-container div {
+  padding: 0;
+  margin: 0 auto;
+}
+
+div#serialports-menu-container label {
+  margin: 0px 15px 0px 5px;
+}
+
+/* WIFI CONFIGURATION */
+
+div#wifi-configuration-movuino-sensors {
+  margin: 0;
+  padding: 0;
+}
+
+input.ip {
+  width: 30px;
+}
+
+/* OSC CONNECTION */
+
+div#osc-flow-representations-container,
+div#osc-flow-representations-container-pre,
+div#osc-flow-representations-container-post {
+  position: relative;
+  padding: 0;
+}
+
+div.osc-arrow {
+  position: absolute;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100px;
+  height: 100px;
+}
+
+div#osc-from-movuino {
+  left: 25%;
+  margin-left: -50px !important;
+  top: -40px;
+  background: url($blueDownArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div#osc-to-movuino {
+  right: 25%;
+  margin-right: -50px !important;
+  top: -61px;
+  background: url($whiteUpArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div#osc-to-computer {
+  left: 25%;
+  margin-left: -50px !important;
+  top: -40px;
+  background: url($whiteDownArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div#osc-from-computer {
+  right: 25%;
+  margin-right: -50px !important;
+  top: -61px;
+  background: url($blueUpArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div#osc-flow-representations-contents {
+  position: relative;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  /*height: 120px;*/
+}
+
+div.osc-messages {
+  position: relative;
+  display: inline-block;
+  width: 49%;
+  height: auto;
+  padding: 50px 0px 50px 0px !important;
+  vertical-align: middle !important;
+  text-align: center;
+}
+
+div#osc-flow-input-messages {
+  left: 0;
+}
+
+div#osc-flow-output-messages {
+  right: 0;
+}
+
+/* DATA */
+
+div#computer-title-container {
+  position: relative;
+}
+
+div#data-visualization {
+  select, input[type="range"] {
+    width: 100%;
+  }
+}
+
+div#visual-render-modulation {
+  width: 50%;
+}
+
+div#data-sensors {
+  width: 50%;
+}
+
+/*
+div#data-visualization {
+  position: relative;
+}
+
+div#visual-render-modulation {
+  position: absolute;
+  left: 0;
+  width: 20%;
+}
+
+div#data-sensors {
+  position: absolute;
+  right: 0;
+  width: 50%;
+}
+*/
+
+div.sensor-repetitions {
+  display: inline-block !important;
+  /*margin: auto;*/
+  /*align-content: center;*/
+  width: 60px;
+  height: 60px;
+  border: 0;
+  border-radius: 60px;
+  background-color: #555;
+}
+
+div.sensor-repetitions::after {
+  content: '';
+  position: relative;
+  display: inline-block;
+  margin: 10px;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 40px;
+  background-color: $lightRed;
+}

@@ -1,0 +1,12 @@
+bin/
+
+**/.DS_Store
+**/Thumbs.db
+
+node_modules/
+dist/
+
+public/css
+public/js
+
+views/contents

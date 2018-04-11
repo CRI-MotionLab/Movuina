@@ -1,0 +1,26 @@
+<div class="container">
+
+  <% switch (data.format) {
+    case 'articles': { %>
+
+      <div class="column">
+        <% for (var a in data.articles) { %>
+          <div class="article">
+            <%- include(`../contents/${data.articles[a]}`, {})%>
+          </div>
+        <% } %>
+      </div>
+
+  <% } break;
+    case 'raw': { %>
+
+      <% for (var a in data.articles) { %>
+        <%- include(`../contents/${data.articles[a]}`, {})%>
+      <% } %>
+
+  <% } break;
+    default:
+    break;
+  } %>
+
+</div>

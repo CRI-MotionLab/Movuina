@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    <%= data.title %>
+  </title>
+
+  <link rel="stylesheet" type="text/css" href="<%= stylePrefix %>/<%= style %>.css">
+
+  <script type="text/javascript">
+    require('<%= scriptPrefix %>/<%= script %>/index.js');
+  </script>
+
+</head>
+<body>
+  <div id="main">
+<%- include('./movuino', {}) %>
+<%- include('./connection', {}) %>
+<%- include('./computer', {}) %>
+  </div>
+</body>
+</html>
