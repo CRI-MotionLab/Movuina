@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    <%= title %>
+  </title>
+
+  <link rel="stylesheet" type="text/css" href="public/css/<%= style %>.css">
+  <script type="text/javascript" src="app/<%= script %>/index.js"></script>
+
+  <script type="text/javascript">
+    // require('./<%= script %>/index.js');
+    // require("<%= script %>");
+  </script>
+
+  <script type="text/javascript">
+    console.log(window.location.pathname);
+  </script>
+
+</head>
+<body>
+  <div id="main">
+<%- include('./movuino', {}) %>
+<%- include('./connection', {}) %>
+<%- include('./computer', {}) %>
+  </div>
+</body>
+</html>

@@ -1,12 +1,16 @@
-import { BrowserWindow, ipcMain } from 'electron';
+import { BrowserWindow, globalShortcut, remote, ipcMain as ipc } from 'electron';
 import path from 'path';
 import url from 'url';
-// import fs = from 'fs-extra';
+import ejs from 'ejs';
+import fs from 'fs-extra';
 
-// Keep a global reference of the window objects, if you don't, the windows will
-// be closed automatically when the JavaScript object is garbage collected.
-// const windows = {};
 const cwd = process.cwd();
+const distPath = path.join(__dirname, '../..');
+
+const viewsPath = path.join(distPath, 'views');
+const publicPath = path.join(distPath, 'public');
+
+console.log(viewsPath);
 
 class Renderer {
   constructor(config) {
@@ -18,47 +22,40 @@ class Renderer {
   }
 
   createWindows() {
-    const prefix = this.config.publicDir;
-    const mainRoute = this.config.routes.main;
     const w = this.windows;
-    // console.log(prefix);
-    // console.log(mainRoute.route);
 
     if (w.main === null) {
       w.main = new BrowserWindow({width: 800, height: 600});
 
-      const htmlString = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <link rel="stylesheet" type="text/css" href="css/main.css">
-      </head>
-      <body>
-        <p> AHA ! </p>
-      </body>
-      </html>`;
+      const render = () => {
+        const routes = this.config.dist.app.routes;
+        // const templatePath = path.join(this.config.paths.viewsDist, routes.main.template) + '.ejs';
+        const templatePath = path.join(viewsPath, routes.main.template) + '.ejs';
 
-      /*
-      // found here :
-      // https://github.com/electron/electron/issues/1146
+        ejs.renderFile(templatePath, routes.main.data, {}, function(err, res) {
+          if (err !== null) {
+            console.error(err);
+          } else {
+            // see : https://github.com/electron/electron/issues/1146
+            w.main.loadURL('data:text/html;charset=UTF-8,' + encodeURIComponent(res), {
+              baseURLForDataURL: `file://${publicPath}`
+            });
+          }
+        });
+      };
 
-      w.main.loadURL('data:text/html;charset=UTF-8,' + encodeURIComponent(htmlString), {
-        baseURLForDataURL: `file://${__dirname}/../../public/`
-        // baseURLForDataURL: `file://${config.path}/../../public/`
+      render();
+
+      globalShortcut.register(process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I', () => {
+        // console.log('cmd+alt+I detected');
+        w.main.webContents.send('cmd', 'toggledevtools');
       });
-      //*/
 
-      //*
-      w.main.loadURL(url.format({
-        // pathname: path.join(__dirname, prefix, mainRoute.route, 'index.html'),
-        pathname: path.join(__dirname, '../../index.html'),
-        // pathname: path.join(cwd, prefix, mainRoute.route, 'index.html'),
-        // pathname: '../index.html',
-        protocol: 'file:',
-        slashes: true,
-        // baseUrl: 'public',
-      }));
-      //*/
+      ipc.on('cmd', (e, arg) => {
+        if (arg === 'refresh' && w.main !== null) {
+          render();
+        }
+      });
 
       w.main.webContents.on('did-finish-load', function() {
         // do stuff
@@ -66,29 +63,10 @@ class Renderer {
         // w.main.webContents.reload();
       });
 
-      // Open the DevTools.
-      // w.main.webContents.openDevTools();
-
       w.main.on('closed', () => {
         w.main = null;
       });
     }
-
-    /*
-    if (w.settings === null) {
-      w.settings = new BrowserWindow({width: 200, height: 200});
-
-      w.settings.loadURL(url.format({
-        pathname: path.join(cwd, 'public/index.html'),
-        protocol: 'file:',
-        slashes: true,
-      }));
-
-      w.settings.on('closed', () => {
-        w.settings = null;
-      });
-    }
-    //*/
   }
 
   deleteWindows() {

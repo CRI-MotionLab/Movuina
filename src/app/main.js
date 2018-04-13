@@ -1,10 +1,9 @@
 import { app } from 'electron';
 import Renderer from './renderer';
+import config from '../config'; // this is just a copy of build/config/used_config.js
 // import server from './server';
 
-const config = process.argv[2] ? JSON.parse(process.argv[2]) : require('../config.js');
-
-const renderer = new Renderer(config.app);
+const renderer = new Renderer(config);
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
@@ -32,18 +31,18 @@ app.on('activate', () => {
 });
 
 
-// this is only for development
-
+// this is for development only, to allow restarting electron on each
+// project modification, but does no harm remaining here.
 process.stdin.on('data', (msg) => {
   switch (msg.toString()) {
     case 'reload':
-      // reload app
+      // todo: reload app ?
       break;
     case 'quit':
       app.quit();
       break;
     case 'server:restart':
-      // restart server
+      // todo: restart server ?
       break;
     default:
       break;
