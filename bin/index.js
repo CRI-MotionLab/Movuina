@@ -132,11 +132,16 @@ function build() {
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 function package() {
-  fs.ensureSymlink(path.join(cwd, 'node_modules'), 'dist/node_modules');
-  packager({
-    dir: paths.dist,
-    out: paths.build,
-    overwrite: true,
+  const nodeModulesPath = path.join(cwd, 'node_modules');
+  fs.removeSync('dist/node_modules');
+  fs.ensureSymlink(nodeModulesPath, 'dist/node_modules')
+  .then(() => {
+    return packager({
+      dir: paths.dist,
+      name: distConfig.app.name,
+      out: paths.build,
+      overwrite: true,
+    });
   })
   .then((appPaths) => { console.log(appPaths); });
 }

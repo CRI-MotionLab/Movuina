@@ -32,7 +32,7 @@ const config = {
     viewsSrc: 'src/views',
     viewsDist: 'dist/views',
 
-    packageSrc: 'src/package.json',
+    packageSrc: 'package.json',
     packageDist: 'dist/package.json',
 
     // create those folders / files automatically
@@ -48,7 +48,8 @@ const config = {
     //------------------------------ application -----------------------------//
 
     app: {
-      root: '', // for relative paths
+      name: 'Movuinode',
+      root: '', // for relative paths (images in views etc)
       stylePrefix: 'public/css',
       scriptPrefix: 'app',
 
@@ -75,7 +76,7 @@ const config = {
     //--------------------------------- server -------------------------------//
 
     server: {
-      root: '', // for relative paths
+      root: '', // for relative paths (images in views etc)
       port: 8000,
       targetIP: '127.0.0.1',
 

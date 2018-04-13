@@ -6,7 +6,7 @@
   "scripts": {
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
-    "versions" : "node bin/versions.js",
+    "versions": "node bin/versions.js",
     "test": "echo \"TODO: write some tests\" && exit 1"
   },
   "author": "Joseph Larralde",
