@@ -16,7 +16,7 @@ Three `npm` scripts are available:
 
 #### structure of this repository
 
-* `assets` contains all the fonts and media used by the application.
+* `assets` contains all assets used by the application and will be copied to `dist/public`.
 * `bin` contains the build system, i.e. all the scripts used to transpile, render, and bundle the source code.
     * `bin/index.js` is the main entry point (see the `scripts` section in `package.json`).
     * `bin/config/default.js` contains all the information needed by the build system (some useful paths and the application's configuration).
