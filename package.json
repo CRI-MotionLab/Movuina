@@ -2,7 +2,7 @@
   "name": "Movuinode",
   "version": "0.0.1",
   "description": "hub application for movuino sensors and more",
-  "main": "app/main.js",
+  "main": "app/app/main.js",
   "scripts": {
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
@@ -19,6 +19,8 @@
     "fs-extra": "^5.0.0",
     "marked": "^0.3.17",
     "mustache": "^2.3.0",
+    "osc": "^2.2.0",
+    "serialport": "^6.1.1",
     "serve-favicon": "^2.4.5",
     "uglify-js": "^3.3.14"
   },

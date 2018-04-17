@@ -7,24 +7,25 @@ const config = {
     dist: 'dist',
     build: 'build',
 
-    appSrc: 'src/app',
-    appDist: 'dist/app',
+    appSrc: 'src/app/app',
+    appDist: 'dist/app/app',
 
-    clientSrc: 'src/client',
-    clientDist: 'dist/client',
+    clientSrc: 'src/app/client',
+    clientDist: 'dist/app/client',
     clientBundle: 'dist/public/js',
 
-    sharedSrc: 'src/shared',
-    sharedDist: 'dist/shared',
+    // interfaceSrc: 'src/interface',
+    // interfaceDist: 'dist/interface',
+    // interfaceBundle: 'dist/public/js',
+
+    sharedSrc: 'src/app/shared',
+    sharedDist: 'dist/app/shared',
 
     stylesSrc: 'src/styles',
     stylesDist: 'dist/public/css',
 
-    fontsSrc: 'assets/fonts',
-    fontsDist: 'dist/public/fonts',
-
-    mediaSrc: 'assets/media',
-    mediaDist: 'dist/public/media',
+    assetsSrc: 'assets',
+    assetsDist: 'dist/public',
 
     contentsSrc: 'src/contents',
     contentsDist: 'dist/contents',
@@ -57,7 +58,7 @@ const config = {
         main: {
           template: 'app/main',
           data: {
-            title: 'Movuino',
+            title: 'Movuinode',
             style: 'main',
             script: 'movuino',
           }
@@ -68,7 +69,7 @@ const config = {
     //------------------------------ client pages ----------------------------//
 
     client: {
-      minify: true,
+      minify: false,
       stylePrefix: 'css',
       scriptPrefix: 'js',
     },
@@ -87,8 +88,13 @@ const config = {
         // To complete
       },
 
+      menus: {
+        // define some menus here
+      },
+
       routes: {
         main: {
+          // eventually use some previously defined menus here
           route: '/',
           template: 'client/main',
           data: {

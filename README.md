@@ -22,9 +22,10 @@ Three `npm` scripts are available:
     * `bin/config/default.js` contains all the information needed by the build system (some useful paths and the application's configuration).
 * `src` is where all the source code is located:
     * `app` contains the es6 source code of the application.
-    * `client` contains the es6 source code of the client pages served by the application's server.
+        * `app/app` contains the main application source.
+        * `app/client` contains the es6 source code of the client pages served by the application's server.
+        * `app/shared` contains some es6 source code shared by `app` and `client`.
     * `contents` contains some `markdown` files that will be rendered to `ejs` files.
-    * `shared` contains some shared es6 source code.
     * `styles` contains the `sass` files that will be rendered to `css` files.
     * `views` contains some `ejs` files that will be copied to the `dist` directory.
 * `dist` is where:
@@ -39,8 +40,8 @@ Three `npm` scripts are available:
 This project uses:
 
 * **`watch`** to watch for modifications in the `src` and `assets` directories and notify them.
-* **`babel`** to transpile the es6 code from `src/app`, `src/client` and `src/shared` into `dist/app`, `dist/client` and `dist/shared`, respectively.
-* **`browserify`** to bundle the transpiled code from `dist/client` and `dist/shared` into `dist/public/js` (to be served by the application's server).
+* **`babel`** to transpile the es6 code from `src/app/app`, `src/app/client` and `src/app/shared` into `dist/app/app`, `dist/app/client` and `dist/app/shared`, respectively.
+* **`browserify`** to bundle the transpiled code from `dist/app/client` and `dist/app/shared` into `dist/public/js` (to be served by the application's server).
 * **`node-sass`** to render the `scss` files from `src/styles` to `css` files in `dist/public/css`.
 * **`marked`** and **`mustache`** to allow writing comprehensive `markdown` files in `src/contents` and translate them to `ejs` in `dist/contents`.
 * **`ejs`** to render the application's `html` interface and the `html` pages served by its server.

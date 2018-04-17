@@ -23,7 +23,7 @@ const config = require(`./config/${configName}`);
 const paths = config.paths;
 const distConfig = config.dist;
 const configPath = `bin/config/${configName}.js`;
-const app = new App('dist/app/main.js', config);
+const app = new App('dist/app/app/main.js', config);
 
 //======================== FOLDER STRUCTURE HOLDERS ==========================//
 
@@ -113,8 +113,7 @@ function build() {
       transpiler.transpileFileAndChildren(appSrcFiles, paths.appSrc, paths.appDist),
       transpiler.transpileFileAndChildren(sharedSrcFiles, paths.sharedSrc, paths.sharedDist),
       fs.copy(paths.viewsSrc, paths.viewsDist),
-      fs.copy(paths.fontsSrc, paths.fontsDist),
-      fs.copy(paths.mediaSrc, paths.mediaDist),
+      fs.copy(paths.assetsSrc, paths.assetsDist),
     ])
     .then(function() {
       transpiler.bundleFileAndChildren(clientSrcFiles, paths.clientSrc, paths.clientDist, paths.clientBundle, distConfig);
@@ -181,7 +180,7 @@ function watchSource() {
     monitor.on('removed', function(f) {});
   });
 
-  //=================== WATCH VIEWS, MEDIA AND FONTS =========================//
+  //======================= WATCH VIEWS AND ASSETS ===========================//
 
   const onAssetsChange = function(f, src, dist) {
     logger.startTwirling();
@@ -203,23 +202,13 @@ function watchSource() {
     });
   });
 
-  watch.createMonitor(paths.mediaSrc, {
+  watch.createMonitor(paths.assetsSrc, {
     filter: filterExtensions([ 'ejs' ])
   }, function(monitor) {
-    monitor.on('created', function(f) { onAssetsChange(f, paths.mediaSrc, paths.mediaDist); });
-    monitor.on('changed', function(f) { onAssetsChange(f, paths.mediaSrc, paths.mediaDist); });
+    monitor.on('created', function(f) { onAssetsChange(f, paths.assetsSrc, paths.assetsDist); });
+    monitor.on('changed', function(f) { onAssetsChange(f, paths.assetsSrc, paths.assetsDist); });
     monitor.on('removed', function(f) {
-      fs.removeSync(f.replace(paths.mediaSrc, paths.mediaDist));
-    });
-  });
-
-  watch.createMonitor(paths.fontsSrc, {
-    filter: filterExtensions([ 'ejs' ])
-  }, function(monitor) {
-    monitor.on('created', function(f) { onAssetsChange(f, paths.fontsSrc, paths.fontsDist); });
-    monitor.on('changed', function(f) { onAssetsChange(f, paths.fontsSrc, paths.fontsDist); });
-    monitor.on('removed', function(f) {
-      fs.removeSync(f.replace(paths.fontsSrc, paths.fontsDist));
+      fs.removeSync(f.replace(paths.assetsSrc, paths.assetsDist));
     });
   });
 
@@ -303,7 +292,7 @@ function watchSource() {
   //=========================== WATCH SHARED SRC =============================//
 
   const onSharedSrcChange = function(f) {
-    updatedSharedSrcDirTree();
+    updateSharedSrcDirTree();
     const file = getFileFromFilename(f, sharedSrcFiles);
     logger.startTwirling();
 
