@@ -87,6 +87,12 @@ class Renderer extends EventEmitter {
         w.main.webContents.send('renderer', 'toggledevtools');
       });
 
+      // find a way to forward all messages this way (or by renderer name channel)
+      // ipc.on('data', (e, ...args) => {
+      //   console.log(e);
+      //   console.log(args);
+      // });
+
       ipc.on('serialport', (e, cmd, arg) => {
         this.emit('serialport', cmd, arg);
       });
@@ -96,8 +102,6 @@ class Renderer extends EventEmitter {
         // w.main.webContents.evaluate('<!DOCTYPE html><html><head></head> <body> <h1>AHA !</h1> </body></html>');
         // w.main.webContents.reload();
       });
-
-      // w.main.webContents.openDevTools();
 
       w.main.on('closed', () => {
         w.main = null;

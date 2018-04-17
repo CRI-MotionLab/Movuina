@@ -128,6 +128,12 @@ class Movuino extends Script {
         this.waveformRenderers[i].pointStyle = this.$pointStyle.value;
       }
     });
+
+    window.onresize = () => {
+      for (let i = 0; i < 3; i++) {
+        this.waveformRenderers[i].updateDimensions();
+      }
+    };
   }
 
   setData(data) {
