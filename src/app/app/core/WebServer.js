@@ -16,12 +16,12 @@ const publicPath = path.join(distPath, 'public');
 //============================================================================//
 // this code used to be in the build directory as "MyServer"
 
-class LocalServer extends EventEmitter {
+class WebServer extends EventEmitter {
   constructor(config) {
     super();
     this.config = config;
-    this.port = this.config.dist.server.port;
-    this.routes = this.config.dist.server.routes;
+    this.port = this.config.dist.webServer.port;
+    this.routes = this.config.dist.webServer.routes;
 
     this.app = express();
     const app = this.app;
@@ -63,4 +63,4 @@ class LocalServer extends EventEmitter {
   }
 };
 
-module.exports = LocalServer;
+export default WebServer;

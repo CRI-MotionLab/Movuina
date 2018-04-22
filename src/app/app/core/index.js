@@ -1,7 +1,11 @@
+import OSCServer from './OSCServer';
 import Renderer from './Renderer';
-import LocalServer from './LocalServer';
+import Serial from './Serial';
+import WebServer from './WebServer';
 
 export {
+  OSCServer,
   Renderer,
-  LocalServer,
+  Serial,
+  WebServer,
 };
