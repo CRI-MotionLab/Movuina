@@ -74,19 +74,19 @@ const config = {
       scriptPrefix: 'js',
     },
 
-    //--------------------------------- server -------------------------------//
+    //--------------------------------- servers ------------------------------//
 
-    server: {
+    oscServer: {
+      portIn: 9000,
+      portOut: 8000,
+    },
+
+    webServer: {
       root: '', // for relative paths (images in views etc)
       port: 8000,
       targetIP: '127.0.0.1',
 
       publicPath: 'dist/public',
-
-      osc: {
-        port: 7000,
-        // To complete
-      },
 
       menus: {
         // define some menus here
