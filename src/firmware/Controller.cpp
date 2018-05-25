@@ -10,19 +10,69 @@ Controller::init(SerialCLI *s, OSCServer *o) {
   serialCLI->sendMessage(cmd, msg);
   
   accelGyro.initialize();
+  // accelGyro.setRate(0);
+  // accelGyro.setI2CMasterModeEnabled(false);
+  // accelGyro.setI2CBypassEnabled(true);
+  // accelGyro.setSleepEnabled(false);
+  
   loadCredentials();
 
+  // outgoing messages:
+  sprintf(oscAddresses[oscAddrSensors], "/%s/sensors\0", getID());
+  sprintf(oscAddresses[oscAddrSettings], "/%s/settings\0", getID());
+
+  // incoming messages:
+  sprintf(oscAddresses[oscAddrVibroPulse], "/%s/vibroPulse\0", getID());
+  sprintf(oscAddresses[oscAddrVibroNow], "/%s/vibroNow\0", getID());
+  
   initialized = true;
 }
 
 void
 Controller::update() {
-  updateSensors();
+  unsigned long now = millis();
+  if (now >= lastHeartBeatDate + heartBeat) {
+    lastHeartBeatDate = now;
+    // call whatever periodic process you like, e.g:
+    // String cmd = "mac address";
+    // String mac = oscServer->getMacAddress();
+    // serialCLI->sendMessage(cmd, mac);
+    readMagnetometerValues();
+  }
+  
+  readAccelGyroValues();
+  sendFrame();
   updateVibrator();
   updateButton();
-  sendFrame();
+
+  // THIS IS THE ONLY AUTHORIZED DELAY
+  delay(framePeriod);
 }
 
+//============================= OSC ===============================//
+
+bool
+Controller::routeOSCMessage(OSCMessage &msg) {
+  if (initialized) {
+    char address[MAX_OSC_ADDRESS_SIZE];
+    msg.getAddress(address);
+  
+    //-------------------------
+    if (strcmp(address, oscAddresses[oscAddrVibroPulse]) == 0) { // todo : route by movuino identifier first
+      vibrationPulseCallback(msg);
+      // sendSerialMessage("vibro", "received pulse");
+    //-------------------------------------------
+    } else if (strcmp(address, oscAddresses[oscAddrVibroNow]) == 0) {
+      vibrateNowCallback(msg);
+      // sendSerialMessage("vibro", "received now");
+    //---------------------------------------
+    }      
+  }
+
+  return initialized;
+}
+
+//*
 bool
 Controller::sendOSCMessage(OSCMessage &msg) {
   if (initialized) {
@@ -66,21 +116,16 @@ Controller::sendOSCSensors() {
     address += getID();
     address += "/sensors";
     OSCMessage msg(address.c_str()); // create an OSC message on address "/<id>/sensors"
-    msg.add(splitFloatDecimal(-ax / 32768.0));   // add acceleration X data as message
-    msg.add(splitFloatDecimal(-ay / 32768.0));   // add acceleration Y data
-    msg.add(splitFloatDecimal(-az / 32768.0));   // add ...
-    msg.add(splitFloatDecimal(gx / 32768.0));
-    msg.add(splitFloatDecimal(gy / 32768.0));
-    msg.add(splitFloatDecimal(gz / 32768.0));    // you can add as many data as you want
-    msg.add(splitFloatDecimal(my / 100.0));
-    msg.add(splitFloatDecimal(mx / 100.0));
-    msg.add(splitFloatDecimal(-mz / 100.0));
+    for (int i = 0; i < 9; i++) {
+      msg.add(sensors[i]);
+    }
     return sendOSCMessage(msg);
   }
 
   return false;
 }
 
+//============================ SERIAL =============================//
 
 bool
 Controller::sendSerialCommand(String &msg) {
@@ -101,24 +146,6 @@ Controller::sendSerialMessage(String &target, String &msg) {
 }
 
 bool
-Controller::setSerialSettings(String *parameters, int nbArguments) {
-  if (initialized) {
-    sendSerialSettings();
-
-    setID((*parameters++).c_str());
-    setSSID((*parameters++).c_str());
-    setPass((*parameters++).c_str());
-    setHostIP((*parameters++).c_str());
-    setPortIn(atoi((*parameters++).c_str()));
-    setPortOut(atoi((*parameters++).c_str()));
-    
-    storeCredentials();
-  }
-
-  return initialized;
-}
-
-bool
 Controller::sendSerialSettings() {
   if (initialized) {
     char pIn[MAX_STRING_SIZE];
@@ -126,20 +153,119 @@ Controller::sendSerialSettings() {
     itoa(getPortIn(), pIn, 10);
     itoa(getPortOut(), pOut, 10);
     
-    const char *settings[7];
-    settings[0] = "settings";
-    settings[1] = getID();
-    settings[2] = getSSID();
-    settings[3] = getPass();
-    settings[4] = getHostIP();
-    settings[5] = pIn;
-    settings[6] = pOut;
+    const char *settings[] = {
+      "settings",
+      getID(), getSSID(), getPass(), getHostIP(), pIn, pOut,
+      getSendOSCSensors() ? "1" : "0",
+      getSendSerialSensors() ? "1" : "0",
+    };
 
-    serialCLI->sendData((char **)settings, 7);
+    serialCLI->sendData((char **)settings, 9);
   }
 
   return initialized;
 }
+
+bool
+Controller::sendSerialMacAddress() {
+  if (initialized) {
+    String mac = oscServer->getMacAddress();
+    String address("mac");
+    serialCLI->sendMessage(address, mac);
+  }
+
+  return initialized;
+}
+
+bool
+Controller::sendSerialIPAddress() {
+  if (initialized) {
+    int ip[4];
+    oscServer->getIPAddress(&ip[0]);
+    String sip = String(ip[0]);
+    sip += ".";
+    sip += ip[1];
+    sip += ".";
+    sip += ip[2];
+    sip += ".";
+    sip += ip[3];
+    String address("ip");
+    serialCLI->sendMessage(address, sip);
+  }
+
+  return initialized;
+}
+
+bool
+Controller::sendSerialSensors() {
+  if (initialized) {
+    String sax(sensors[0]);
+    String say(sensors[1]);
+    String saz(sensors[2]);
+    
+    String sgx(sensors[3]);
+    String sgy(sensors[4]);
+    String sgz(sensors[5]);
+
+    String smx(sensors[6]);
+    String smy(sensors[7]);
+    String smz(sensors[8]);
+
+    const char *sensors[] = {
+      "sensors",
+      sax.c_str(), say.c_str(), saz.c_str(),
+      sgx.c_str(), sgy.c_str(), sgz.c_str(),
+      smx.c_str(), smy.c_str(), smz.c_str()
+    };
+
+    serialCLI->sendData((char **)sensors, 10);
+  }
+
+  return initialized;
+}
+
+bool
+Controller::setSerialSettings(String *parameters, int nbArguments) {
+  if (initialized) {
+    bool autoResetWiFi = false;
+
+    setID((*parameters++).c_str());
+
+    const char *newSSID = (*parameters++).c_str();
+    const char *newPass = (*parameters++).c_str();
+    
+    setHostIP((*parameters++).c_str());
+
+    unsigned int newPortIn = atoi((*parameters++).c_str());
+    unsigned int newPortOut = atoi((*parameters++).c_str());
+    
+    setSendOSCSensors((*parameters++).c_str()[0] == '1');
+    setSendSerialSensors((*parameters++).c_str()[0] == '1');
+
+    if (strcmp(newSSID, getSSID()) != 0 ||
+        strcmp(newPass, getPass()) != 0 ||
+        newPortIn != getPortIn() || newPortOut != getPortOut()) {
+      autoResetWiFi = true;
+    }
+    
+    setSSID(newSSID);
+    setPass(newPass);
+    setPortIn(newPortIn);
+    setPortOut(newPortOut);
+    
+    storeCredentials();
+    
+    if (autoResetWiFi) {
+      // oscServer->startWiFi();
+      oscServer->shutdownWiFi();
+      oscServer->awakeWiFi();
+    }
+  }
+
+  return initialized;
+}
+
+//=========================== VIBRATOR ============================//
 
 void
 Controller::vibrationPulseCallback(OSCMessage &msg) {
@@ -182,17 +308,69 @@ Controller::vibrateNow(bool vibOnOff) {
 
 void
 Controller::sendFrame() {
-  
+  if (getSendOSCSensors()) {
+    sendOSCSensors();
+  }
+
+  if (getSendSerialSensors()) {
+    sendSerialSensors();
+  }
 }
 
 void
-Controller::updateSensors() {
-  // GET MOVUINO DATA
-  accelGyro.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz); // Get all 9 axis data (acc + gyro + magneto)
-  //---- OR -----//
-  //accelgyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz); // Get only axis from acc & gyr
+Controller::readAccelGyroValues() {
+  accelGyro.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
 
-  magnetometerAutoCalibration();
+  // this is equivalent to getMotion6 :
+  //accelGyro.getAcceleration(&ax, &ay, &az);
+  //accelGyro.getRotation(&gx, &gy, &gz);
+
+  // NB : don't use getMotion9 as its execution lasts 20ms
+  // minimum because of delays and limits the global execution rate.
+  // readMagnetometerValues() replaces that and is called
+  // in a non-blocking loop
+
+  sensors[0] = ax / float(32768);
+  sensors[1] = ay / float(32768);
+  sensors[2] = az / float(32768);
+
+  sensors[3] = gx / float(32768);
+  sensors[4] = gy / float(32768);
+  sensors[5] = gz / float(32768);
+}
+
+/** 
+ * adapted to be non blocking using a state flag
+ * from original sparkun / Jeff Rowberg MPU6050 library:
+ * MPU6050::getMag(int16_t *mx, int16_t *my, int16_t *mz)
+ * there used to be delay(10)'s between calls to writeBytes and readBytes,
+ * this function is now called in a non-blocking loop (heartBeat = 10 ms)
+ * and keeps its own state up to date.
+ */
+void
+Controller::readMagnetometerValues() {
+  if (readMagState == 0) {
+    // set i2c bypass enable pin to true to access magnetometer
+    I2Cdev::writeByte(MPU6050_DEFAULT_ADDRESS, MPU6050_RA_INT_PIN_CFG, 0x02);
+    readMagState = 1;
+  } else if (readMagState == 1) {
+    // enable the magnetometer
+    I2Cdev::writeByte(MPU9150_RA_MAG_ADDRESS, 0x0A, 0x01);  
+    readMagState = 2;
+  } else {
+    // read it !
+    I2Cdev::readBytes(MPU9150_RA_MAG_ADDRESS, MPU9150_RA_MAG_XOUT_L, 6, magBuffer);
+    mx = (((int16_t)magBuffer[1]) << 8) | magBuffer[0];
+    my = (((int16_t)magBuffer[3]) << 8) | magBuffer[2];
+    mz = (((int16_t)magBuffer[5]) << 8) | magBuffer[4];
+
+    sensors[6] = mx / float(100);
+    sensors[7] = my / float(100);
+    sensors[8] = mz / float(100);
+
+    readMagState = 0;
+    readMagnetometerValues(); // reset i2c bypass enable pin as soon as we are done
+  }
 }
 
 void
@@ -207,7 +385,7 @@ Controller::updateVibrator() {
     }
   }
 
-  // Shut down vibrator if number of cycles reach (if nV_ = -1 get infinite cycles)
+  // Shut down vibrator if number of cycles reach (set nVib to -1 for infinite cycles)
   if (nVib != -1 && (millis() - vibTimer > nVib * dVibTotal)) {
     digitalWrite(pinVibro, LOW);
     isVibrating = false;
@@ -216,6 +394,27 @@ Controller::updateVibrator() {
 
 void
 Controller::updateButton() {
+  bool btn = digitalRead(pinBtn) > 0;
+  unsigned long now = millis();
+
+  if (btn && !btnOn) {
+    btnOn = true;
+    lastBtnDate = now;
+    // do whatever on buttonPress
+  } else if (!btn && btnOn) {
+    btnOn = false;
+    // do whatever on buttonRelease
+
+    if (now - lastBtnDate > btnPressTimeThresh) {
+      // do whatever on buttonRelease after time threshold
+    } else {
+      // do whatever on buttonRelease before time threshold
+    }
+  } else if (btnOn && now - lastBtnDate > btnPressTimeThresh) {
+    // do whatever on buttonHold until time threshold
+  }
+
+  
   btnOn = digitalRead(pinBtn); // check if button is pressed
 
   if (btnOn) {
@@ -239,24 +438,17 @@ Controller::updateButton() {
 
       // TOGGLE WIFI
 
-      // oscServer.toggleWiFiState();
+      // oscServer->toggleWiFiState();
       /*
       if (WiFi.status() == WL_CONNECTED) {
-        //shutDownWifi();
+        //oscServer->shutDownWifi();
       } else {
-        //awakeWifi();
+        //oscServer->awakeWifi();
       }
       //*/
     }
   }
 }
-
-float
-Controller::splitFloatDecimal(float f){
-  int i = f * 1000;
-  return i / 1000.0f;
-}
-
 
 void
 Controller::magnetometerAutoCalibration() {
@@ -283,3 +475,13 @@ Controller::magnetometerAutoCalibration() {
   my = magVal[1];
   mz = magVal[2];
 }
+
+/**
+ * not used anymore ???
+ */
+float
+Controller::splitFloatDecimal(float f){
+  int i = f * 1000;
+  return i / 1000.0f;
+}
+

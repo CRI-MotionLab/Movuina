@@ -4,7 +4,6 @@
 #include "I2Cdev.h"
 #include "MPU6050.h"
 
-#include <OSCMessage.h>
 #include "Settings.h"
 #include "SerialCLI.h"
 #include "OSCServer.h"
@@ -14,35 +13,57 @@ const int pinLedWifi = 2;  // wifi led indicator
 const int pinLedBat = 0;   // battery led indicator
 const int pinVibro = 14;   // vibrator pin
 
+enum oscAddress {
+  oscAddrSensors = 0,
+  oscAddrSettings,
+  oscAddrVibroPulse,
+  oscAddrVibroNow
+};
+
 class Controller : public Settings {
 private:
   MPU6050 accelGyro;
-  int packetNumber;// = 0;
+  int packetNumber;
   int16_t ax, ay, az; // store accelerometre values
   int16_t gx, gy, gz; // store gyroscope values
   int16_t mx, my, mz; // store magneto values
+  float sensors[9];
   int magRange[6];// = {666, -666, 666, -666, 666, -666}; // magneto range values for calibration
+  uint8_t magBuffer[14];
+  int readMagState;
 
   boolean isVibrating;
-  int dVibOn, dVibOff, dVibTotal;
+  unsigned long dVibOn, dVibOff, dVibTotal;
   float rVib;
-  long vibTimer;
-  int nVib;
+  unsigned long vibTimer;
+  unsigned int nVib;
 
   bool btnOn;
-  float btnPressTimeThresh; // pressure time needed to switch Movuino state
-  float lastBtnDate;
   bool lockPress;
+  unsigned long btnPressTimeThresh; // pressure time needed to switch Movuino state
+  unsigned long lastBtnDate;
 
   SerialCLI *serialCLI;
   OSCServer *oscServer;
   bool initialized;
 
+  unsigned int framePeriod;
+  unsigned long heartBeat; // ms period for executing various tasks at a lower rate
+  unsigned long lastHeartBeatDate;
+
+public:
+  char oscAddresses[MAX_OSC_ADDRESSES][MAX_OSC_ADDRESS_SIZE];
+
 public:
   Controller() :
   //------------
   packetNumber(0),
+  ax(0), ay(0), az(0),
+  gx(0), gy(0), gz(0),
+  mx(0), my(0), mz(0),
+  sensors({ 0, 0, 0, 0, 0, 0, 0, 0, 0 }),
   magRange({ 666, -666, 666, -666, 666, -666 }),
+  readMagState(0),
   //------------
   isVibrating(false),
   dVibOn(1000),
@@ -56,7 +77,10 @@ public:
   btnPressTimeThresh(500),
   lastBtnDate(0),
   lockPress(false),
-  initialized(false) {
+  initialized(false),
+  framePeriod(5), // ms
+  heartBeat(10), // ms
+  lastHeartBeatDate(millis()) {
     pinMode(pinBtn, INPUT_PULLUP); // pin for the button
     pinMode(pinLedWifi, OUTPUT);   // pin for the wifi led
     pinMode(pinLedBat, OUTPUT);    // pin for the battery led
@@ -68,19 +92,32 @@ public:
   void init(SerialCLI *s, OSCServer *o);
   void update();
 
+  // void enableSendingOSCSensors(bool b);
+  // void enableSendingSerialSensors(bool b);
+  // void enableReadingMagnetometer(bool b);
+
+  //---------------------------------- OSC -------------------------------------//
+
+  bool routeOSCMessage(OSCMessage &msg);
   bool sendOSCMessage(OSCMessage &msg);
   bool oscErrorCallback(OSCMessage &msg);
   bool sendOSCSettings();
   bool sendOSCSensors();
 
+  //--------------------------------- SERIAL -----------------------------------//
+
   bool sendSerialCommand(String &msg);
-  bool sendSerialMessage(String &target, String &msg);
-  bool setSerialSettings(String *parameters, int n);
-  
+  bool sendSerialMessage(String &target, String &msg);  
   bool sendSerialSettings();
+  bool sendSerialMacAddress();
+  bool sendSerialIPAddress();
   bool sendSerialSensors();
 
-  // HARDWARE CONTROL
+  // auto restarts WiFi if any value in [ ssid, pass, portIn, portOut ] changed
+  bool setSerialSettings(String *parameters, int n);
+
+  //--------------------------------- VIBRATOR ---------------------------------//
+
   void vibrationPulseCallback(OSCMessage &msg);
   void vibrationPulse(int onDuration, int offDuration, int nb);
   void vibrateNowCallback(OSCMessage &msg);
@@ -89,14 +126,15 @@ public:
 //=================================== PRIVATE ==================================//
 
 private:
-  void updateSensors();
+  void readAccelGyroValues();
+  void readMagnetometerValues();
+  void sendFrame();
+
   void updateVibrator();
   void updateButton();
   
-  void sendFrame();
-
-  float splitFloatDecimal(float f);
   void magnetometerAutoCalibration();
+  float splitFloatDecimal(float f);
 };
 
 #endif /* _CONTROLLER_H_ */

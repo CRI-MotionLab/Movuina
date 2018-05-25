@@ -69,21 +69,13 @@ SerialCLI::processInputMessage() {
   for (int i = 0; i < inputCommandLength; ++i) {
     inputCommand[i] = "";
     char c = inputMessage.charAt(k++);
+    // inputCommand[i] = c;
 
-    while ((int) c != 2 && k < msgLength) {
+    while (c != 2 && k <= msgLength) {
       inputCommand[i] += c;
       c = inputMessage.charAt(k++);
     }
   }
-
-  const char *res[inputCommandLength];
-  for (int i = 0; i < inputCommandLength; i++) {
-    res[i] = inputCommand[inputCommandLength].c_str();
-  }
-  sendData((char **)res, inputCommandLength);
-
-  String msg(msgLength);
-  sendCommand(msg);
 }
 
 void
@@ -97,9 +89,7 @@ SerialCLI::routeInputMessage() {
   } else if (strcmp(cmd, "settings?") == 0) { // getter
     controller->sendSerialSettings();
   } else if (strcmp(cmd, "settings!") == 0) { // setter
-    // if (inputCommandLength == 7) { // ssid, pass, hostip, portin, portout, id
-      controller->setSerialSettings((String *)(&inputCommand[1]), inputCommandLength - 1);
-    // }
+    controller->setSerialSettings((String *)(&inputCommand[1]), inputCommandLength - 1);
   } else if (strcmp(cmd, "pulse!") == 0) {
     if (inputCommandLength == 4) {
       int dVibOn = inputCommand[1].toInt();
@@ -107,61 +97,11 @@ SerialCLI::routeInputMessage() {
       int nVib = inputCommand[3].toInt();
       controller->vibrationPulse(dVibOn, dVibOff, nVib);
     }
+  } else if (strcmp(cmd, "sensors!") == 0) { // getter
+    controller->setSendSerialSensors(inputCommand[1].toInt() != 0);
+  } else if (strcmp(cmd, "address?") == 0) {
+    // send ip address
+    controller->sendSerialIPAddress();
   }
 }
-
-/*
-void updateValues() {
-  delay(5);
-  switch (msgAdr) {
-    case 'c':
-      //Send to MAX
-      Serial.write(95);
-      Serial.print("usbconnect");
-      Serial.write(95);
-      //-----------
-      break;
-    case 'w':
-      if(msgVal=="offwifi"){
-        //shutDownWifi();
-      }
-      if(msgVal=="onwifi"){
-        //awakeWifi();
-      }
-      if(msgVal=="getmovuinoIP"){
-        //sendMovuinoAddr();
-      }
-      break;
-    case 's':
-      msgVal.toCharArray(ssid, bufIndex);
-      break;
-    case 'p':
-      msgVal.toCharArray(pass, bufIndex);
-      break;
-    case 'i':
-      msgVal.toCharArray(hostIP, bufIndex);
-      break;
-    case 'v':
-      // currently just to test the vibrator without wifi
-      if(msgVal=="now"){
-        vibroNow(true);
-      }
-      if(msgVal=="off"){
-        vibroNow(false);
-      }
-      if(msgVal=="pulse"){
-        setVibroPulse(500,200,5);
-      }
-      break;
-    case 'r':
-      // Serial.write(95);
-      Serial.print(ssid);
-      // Serial.write(95);
-      break;
-    default:
-      Serial.print("No matching address");
-      break;
-  }
-}
-//*/
 

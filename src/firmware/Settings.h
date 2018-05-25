@@ -23,15 +23,21 @@ private:
   unsigned int portIn;
   unsigned int portOut;
 
+  bool sendOSCSensors;
+  bool sendSerialSensors;
+
 public:
   Settings() {
     strcpy(init, "uninitialized");
-    strcpy(id, "1");
+    strcpy(id, "no_name");
     strcpy(ssid, "my_network_ssid");
     strcpy(pass, "my_network_pass");
-    strcpy(hostIP, "192.168.0.0");
+    strcpy(hostIP, "192.168.0.100");
     portIn = 8000;
     portOut = 8001;
+    sendOSCSensors = true;
+    sendSerialSensors = true;
+    
     EEPROM.begin(512);
   }
 
@@ -44,6 +50,8 @@ public:
   const char *getHostIP() { return hostIP; }
   unsigned int getPortIn() { return portIn; }
   unsigned int getPortOut() { return portOut; }
+  bool getSendOSCSensors() { return sendOSCSensors; }
+  bool getSendSerialSensors() { return sendSerialSensors; }
 
   void setID(const char *i) { strcpy(id, i); }
   void setSSID(const char *s) { strcpy(ssid, s); }
@@ -51,6 +59,8 @@ public:
   void setHostIP(const char *ip) { strcpy(hostIP, ip); }
   void setPortIn(unsigned int p) { portIn = p; }
   void setPortOut(unsigned int p) { portOut = p; }
+  void setSendOSCSensors(bool b) { sendOSCSensors = b; }
+  void setSendSerialSensors(bool b) { sendSerialSensors = b; }
 
   //======================== CREDENTIALS MANAGEMENT ==========================//
 
@@ -67,6 +77,9 @@ public:
 
       portIn = readUnsignedInt(&address);
       portOut = readUnsignedInt(&address);
+
+      sendOSCSensors = readChar(&address) == '1';
+      sendSerialSensors = readChar(&address) == '1';
 
       return true;
     }
@@ -86,11 +99,22 @@ public:
     writeUnsignedInt(&address, portIn);
     writeUnsignedInt(&address, portOut);
 
+    writeChar(&address, sendOSCSensors ? '1' : '0');
+    writeChar(&address, sendSerialSensors ? '1' : '0');
+
     EEPROM.commit();
   }
 
 private:
   //===================== EEPROM READ / WRITE UTILITIES ======================//
+
+  char readChar(int *address) {
+    return EEPROM.read((*address)++);
+  }
+
+  void writeChar(int *address, char c) {
+    EEPROM.write((*address)++, c);
+  }
 
   void readCharArray(int *address, char *str, unsigned int len) {
     for (int i = 0; i < len; i++) {
