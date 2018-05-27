@@ -163,6 +163,7 @@ class Computer extends EventEmitter {
         this.waveformRenderers[i].zoom = this.$zoom.value * 0.01;
       }
     });
+    this.$zoom.value = 0;
 
     this.$lineWidth = document.querySelector('#line-width-slider');
     this.$lineWidth.addEventListener('change', () => {
@@ -170,6 +171,7 @@ class Computer extends EventEmitter {
         this.waveformRenderers[i].lineWidth = this.$lineWidth.value * 0.01 + 1;
       }
     });
+    this.$lineWidth.value = 0;
 
     this.$lineStyle = document.querySelector('#line-style-menu');
     this.$lineStyle.addEventListener('change', () => {
@@ -203,12 +205,14 @@ class Computer extends EventEmitter {
       this.resampler.params.set('resamplingFrequency', this.resamplingFrequency);
       // this.updateResamplingFrequency();
     });
+    this.$resamplingFrequency.value = 100;
 
     this.$filterSize = document.querySelector('#filter-size-slider');
     this.$filterSize.addEventListener('change', () => {
       this.filterSize = parseInt(this.$filterSize.value * 0.49 + 1);
       this.mvAvrg.params.set('order', this.filterSize);
     });
+    this.$filterSize.value = 0;
 
     // this.eventIn.start();
     // this.resampler.start();

@@ -63,7 +63,7 @@ class Renderer extends EventEmitter {
 
     if (this.window === null) {
       this.window = new BrowserWindow({ width: 800, height: 600 });
-      this.window.webContents.openDevTools()
+      // this.window.webContents.openDevTools()
 
       //=========================== render function ==========================//
 
