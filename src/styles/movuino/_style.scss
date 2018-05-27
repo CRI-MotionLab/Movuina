@@ -61,11 +61,11 @@ select {
 }
 
 label.bad {
-  color: #f00;
+  color: #e00;
 }
 
 label.good {
-  color: #0f0;
+  color: #0e0;
 }
 
 button.bad {
@@ -95,6 +95,13 @@ button, span, select {
 }
 
 /* adjust colors here : http://doc.instantreality.org/tools/color_calculator/ */
+
+button.get-my-ip {
+  display: inline-block;
+  //padding: 5px;
+  margin-left: 10px;
+  margin-bottom: 2px;
+}
 
 button.blue-rounded {
   border: 0;
@@ -167,6 +174,7 @@ div#main {
   min-height: 100%;
   background-color: #fff;
   text-align: center;
+  max-width: 80%;
 }
 
 div#movuino, div#computer {
@@ -345,8 +353,8 @@ div#wifi-configuration-movuino-sensors {
   padding: 0;
 }
 
-input.ip {
-  width: 30px;
+input.small-number {
+  width: 40px;
 }
 
 /* OSC CONNECTION */
@@ -414,6 +422,7 @@ div.osc-messages {
   padding: 50px 0px 50px 0px !important;
   vertical-align: middle !important;
   text-align: center;
+  // font-size: 0.8em;
 }
 
 div#osc-flow-input-messages {
@@ -476,11 +485,19 @@ div.sensor-repetitions {
 div.sensor-repetitions::after {
   content: '';
   position: relative;
-  display: inline-block;
+  display: none;
   margin: 10px;
   width: 40px;
   height: 40px;
   border: 0;
   border-radius: 40px;
-  background-color: $lightRed;
 }
+
+div.sensor-repetitions.on::after {
+  display: inline-block;
+}
+
+div.sensor-repetitions.yellow::after { background-color: $lightYellow; }
+div.sensor-repetitions.blue::after { background-color: $lightBlue; }
+div.sensor-repetitions.red::after { background-color: $lightRed; }
+

@@ -89,12 +89,12 @@
 
         <div>
           <div>
-            <div class="subtle"> Frequency </div>
-            <input type="range">
+            <div class="subtle"> Resampling frequency </div>
+            <input type="range" id="resampling-frequency-slider">
           </div>
           <div>
-            <div class="subtle"> Lowpass filter </div>
-            <input type="range">
+            <div class="subtle"> Lowpass filter window size </div>
+            <input type="range" id="filter-size-slider">
           </div>
         </div>
       </div> <!-- visual render -->
@@ -165,7 +165,7 @@
         <div id="movuino-accelerometer-repetitions" class="inline third">
           <div class="thin">
             <canvas id="movuino-accelerometer-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset"></div>
+            <div class="sensor-repetitions reset yellow"></div>
           </div>
           <div class="subtle">Accelerometer</div>
         </div>
@@ -173,7 +173,7 @@
         <div id="movuino-gyroscope-repetitions" class="inline third">
           <div class="thin">
             <canvas id="movuino-gyroscope-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset"></div>
+            <div class="sensor-repetitions reset blue"></div>
           </div>
           <div class="subtle">Gyroscope</div>
         </div>
@@ -181,7 +181,7 @@
         <div id="movuino-magnetometer-repetitions" class="inline third">
           <div class="thin">
             <canvas id="movuino-magnetometer-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset"></div>
+            <div class="sensor-repetitions reset red"></div>
           </div>
           <div class="subtle">Magnetometer</div>
         </div>

@@ -16,6 +16,7 @@ const int pinVibro = 14;   // vibrator pin
 enum oscAddress {
   oscAddrSensors = 0,
   oscAddrSettings,
+  oscAddrHeartBeat,
   oscAddrVibroPulse,
   oscAddrVibroNow
 };
@@ -30,7 +31,6 @@ private:
   float sensors[9];
   int magRange[6];// = {666, -666, 666, -666, 666, -666}; // magneto range values for calibration
   uint8_t magBuffer[14];
-  int readMagState;
 
   boolean isVibrating;
   unsigned long dVibOn, dVibOff, dVibTotal;
@@ -48,8 +48,13 @@ private:
   bool initialized;
 
   unsigned int framePeriod;
-  unsigned long heartBeat; // ms period for executing various tasks at a lower rate
+
+  unsigned long heartBeatPeriod; // ms period for executing various tasks at a lower rate
   unsigned long lastHeartBeatDate;
+
+  int readMagState;
+  unsigned long readMagPeriod;
+  unsigned long lastReadMagDate;
 
 public:
   char oscAddresses[MAX_OSC_ADDRESSES][MAX_OSC_ADDRESS_SIZE];
@@ -63,7 +68,6 @@ public:
   mx(0), my(0), mz(0),
   sensors({ 0, 0, 0, 0, 0, 0, 0, 0, 0 }),
   magRange({ 666, -666, 666, -666, 666, -666 }),
-  readMagState(0),
   //------------
   isVibrating(false),
   dVibOn(1000),
@@ -79,18 +83,22 @@ public:
   lockPress(false),
   initialized(false),
   framePeriod(5), // ms
-  heartBeat(10), // ms
-  lastHeartBeatDate(millis()) {
+  heartBeatPeriod(1000), // ms
+  lastHeartBeatDate(millis()),
+  readMagState(0),
+  readMagPeriod(10), // ms
+  lastReadMagDate(millis()) {
     pinMode(pinBtn, INPUT_PULLUP); // pin for the button
-    pinMode(pinLedWifi, OUTPUT);   // pin for the wifi led
-    pinMode(pinLedBat, OUTPUT);    // pin for the battery led
-    pinMode(pinVibro, OUTPUT);    // pin for the vibrator
+    pinMode(pinLedWifi, OUTPUT); // pin for the wifi led
+    pinMode(pinLedBat, OUTPUT); // pin for the battery led
+    pinMode(pinVibro, OUTPUT); // pin for the vibrator
   }
 
   ~Controller() {}
 
   void init(SerialCLI *s, OSCServer *o);
   void update();
+  void setWiFi(bool on);
 
   // void enableSendingOSCSensors(bool b);
   // void enableSendingSerialSensors(bool b);
@@ -102,6 +110,7 @@ public:
   bool sendOSCMessage(OSCMessage &msg);
   bool oscErrorCallback(OSCMessage &msg);
   bool sendOSCSettings();
+  bool sendOSCHeartBeat();
   bool sendOSCSensors();
 
   //--------------------------------- SERIAL -----------------------------------//
@@ -109,11 +118,12 @@ public:
   bool sendSerialCommand(String &msg);
   bool sendSerialMessage(String &target, String &msg);  
   bool sendSerialSettings();
+  bool sendSerialHeartBeat();
   bool sendSerialMacAddress();
   bool sendSerialIPAddress();
   bool sendSerialSensors();
 
-  // auto restarts WiFi if any value in [ ssid, pass, portIn, portOut ] changed
+  // auto restarts WiFi if any value in [ ssid, pass, portIn, portOut ] changed and WiFi enabled
   bool setSerialSettings(String *parameters, int n);
 
   //--------------------------------- VIBRATOR ---------------------------------//

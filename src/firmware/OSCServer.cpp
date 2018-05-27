@@ -73,7 +73,20 @@ OSCServer::getIPAddress(int *res) { // must be of type int[4]
   }
 }
 
+String
+OSCServer::getStringIPAddress() {
+  int ip[4];
+  getIPAddress(&ip[0]);
+  String sip = String(ip[0]) + "." + ip[1] + "." + ip[2] + "." + ip[3];
+  return sip;
+}
+
 //============================== WIFI CONNECTION ==============================//
+
+bool
+OSCServer::getWiFiState() {
+  return WiFi.status() == WL_CONNECTED;
+}
 
 //----------------------------------- START -----------------------------------//
 
@@ -81,9 +94,10 @@ void
 OSCServer::startWiFi() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(controller->getSSID(), controller->getPass());
+  digitalWrite(pinLedBat, LOW); // turn ON battery led
 
   unsigned long startTimer = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 10000) { // originally 20000 (20s)
+  while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 15000) { // originally 20000 (20s)
     digitalWrite(pinLedWifi, LOW);
     delay(200);
     digitalWrite(pinLedWifi, HIGH);
@@ -113,6 +127,8 @@ OSCServer::startWiFi() {
     digitalWrite(pinLedWifi, HIGH); // turn OFF wifi led
     digitalWrite(pinLedBat, HIGH);  // turn OFF battery led
   }
+
+  initialized = true;
 }
 
 //--------------------------------- SHUTDOWN ----------------------------------//
@@ -134,6 +150,12 @@ OSCServer::shutdownWiFi() {
 void
 OSCServer::awakeWiFi() {
   if(!(WiFi.status() == WL_CONNECTED)) {
+
+    if (!initialized) {
+      startWiFi();
+      return;
+    }
+    
     // Awake wifi and re-connect Movuino
     WiFi.forceSleepWake();
     // WiFi.mode(WIFI_STA); // already set
@@ -142,7 +164,7 @@ OSCServer::awakeWiFi() {
 
     //Blink wifi led while wifi is connecting
     unsigned long startTimer = millis();
-    while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 10000) { // originally 20000 (20s)
+    while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 15000) { // originally 20000 (20s)
       digitalWrite(pinLedWifi, LOW); // turn ON wifi led
       delay(200);
       digitalWrite(pinLedWifi, HIGH); // turn OFF wifi led

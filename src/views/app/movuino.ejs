@@ -21,7 +21,7 @@
           </select>
         </div>
 
-        <label class="bad">
+        <label id="movuino-found-label" class="bad">
           Movuino not found
         </label>
       </span> </div>
@@ -34,36 +34,75 @@
     </div>
 
     <div id="wifi-configuration-network" class="section-subcontainer">
-      <div id="wifi-configuration-network-info">
+      <!-- <div id="wifi-configuration-network-info"> -->
+      <div>
         <div class="inline">
           <div> Wifi name (SSID) </div>
-          <input type="text">
+          <input type="text" id="network-ssid">
         </div>
         <div class="inline">
           <div> Wifi password </div>
-          <input type="password">
+          <input type="password" id="network-password">
         </div>
-        <div class="inline">
+        <!-- <div class="inline third"> -->
+        <div>
           <div> IP address of your computer </div>
-          <input type="number" class="ip">
-          .
-          <input type="number" class="ip">
-          .
-          <input type="number" class="ip">
-          .
-          <input type="number" class="ip">
+          <div class="inline reset">
+            <input type="number" class="small-number" id="host-ip-1">
+            .
+            <input type="number" class="small-number" id="host-ip-2">
+            .
+            <input type="number" class="small-number" id="host-ip-3">
+            .
+            <input type="number" class="small-number" id="host-ip-4">
+          </div>
+          <div class="inline reset">
+            <button id="get-my-ip-btn" class="get-my-ip"> Get my IP </button>
+          </div>
+        </div>
+
+        <div class="inline">
+          <div> Input port </div>
+          <input type="number" class="small-number" id="movuino-input-port">
+        </div>
+
+        <div class="inline">
+          <div> Output port </div>
+          <input type="number" class="small-number" id="movuino-output-port">
+        </div>
+
+        <div class="inline">
+          <div> Movuino OSC identifier </div>
+          <input type="text" id="movuino-osc-identifier">
         </div>
       </div>
 
-      <div id="wifi-configuration-network-refresh">
-        <button id="refresh-wifi-connection-btn" class="blue-rounded">
-          Refresh connection
+      <div>
+        <div class="inline reset">
+          <div> Send OSC sensors </div>
+          <input id="send-osc-sensors" type="checkbox">
+        </div>
+
+        <div class="inline reset">
+          <div> Send serial sensors </div>
+          <input id="send-serial-sensors" type="checkbox">
+        </div>
+      </div>
+
+      <div id="update-movuino-settings">
+        <button id="update-movuino-settings-btn" class="blue-rounded">
+          Update settings
         </button>
       </div>
 
-      <div id="wifi-configuration-network-disconnect">
-        <button id="wifi-disconnect-btn" class="circle bad"></button>
-        <label class="bad"> Disconnect from Wifi </label>
+      <div id="movuino-wifi-on-off">
+        <div class="reset"> WiFi </div>
+        <div>
+          <label class="switch">
+            <input type="checkbox" id="movuino-wifi-on-off-btn">
+            <span class="slider round"></span>
+          </label>
+        </div>
       </div>
     </div>
 
@@ -93,19 +132,19 @@
       </div>
 
       <div id="wifi-configuration-movuino-get-ip">
-        <button id="get-movuino-ip-btn" class="blue-rounded">
+        <button id="get-movuino-ip" class="blue-rounded">
           Get Movuino IP address
         </button>
       </div>
 
       <div id="wifi-configuration-movuino-ip">
-        <input type="number" class="ip" disabled>
+        <input type="number" class="small-number" id="movuino-ip-1" disabled>
         .
-        <input type="number" class="ip" disabled>
+        <input type="number" class="small-number" id="movuino-ip-2" disabled>
         .
-        <input type="number" class="ip" disabled>
+        <input type="number" class="small-number" id="movuino-ip-3" disabled>
         .
-        <input type="number" class="ip" disabled>
+        <input type="number" class="small-number" id="movuino-ip-4" disabled>
       </div>
     </div>
 

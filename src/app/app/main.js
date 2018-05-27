@@ -1,6 +1,5 @@
 import path from 'path'
 import url from 'url';
-import os from 'os';
 import { app } from 'electron';
 import osc from 'osc';
 import config from '../../config'; // this is just a copy of build/config/<used_config_name>.js
@@ -11,22 +10,6 @@ import {
   WebServer,
   OSCServer,
 } from './core';
-
-// found here :
-// https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
-
-var ifaces = os.networkInterfaces();
-Object.keys(ifaces).forEach(function(ifname) {
-  ifaces[ifname].forEach(function(iface) {
-    if (iface.family !== 'IPv4' || iface.internal !== false) {
-      return;
-    }
-
-    console.log(ifname + ' : ' + iface.address); // this is my IP
-  });
-});
-
-//============================================================================//
 
 const serial = new Serial(config);
 const renderer = new Renderer(config);
@@ -45,6 +28,18 @@ renderer.on('movuino', (cmd, arg) => {
 
 serial.on('ports', p => {
   renderer.send('serialport', 'ports', p)
+});
+
+serial.on('movuino', (cmd, args) => {
+  renderer.send('movuino', cmd, args);
+});
+
+renderer.on('oscserver', (cmd, args) => {
+  oscServer.executeCommand(cmd, args);
+});
+
+oscServer.on('oscmessage', (cmd, args) => {
+  renderer.send('oscmessage', cmd, args);
 });
 
 //--------------------------------------- app stuff

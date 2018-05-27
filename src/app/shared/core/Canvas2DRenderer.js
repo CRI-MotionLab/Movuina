@@ -11,7 +11,7 @@ class Canvas2DRenderer {
   }
 
   setData(data) {
-    this.data = data;
+    this.data = JSON.parse(JSON.stringify(data));
   }
 
   render() {
@@ -24,7 +24,7 @@ class Canvas2DRenderer {
     }, 40);
   }
 
-  _render(data) {
+  _render() {
     // do nothing by default
   }
 

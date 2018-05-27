@@ -97,11 +97,13 @@ SerialCLI::routeInputMessage() {
       int nVib = inputCommand[3].toInt();
       controller->vibrationPulse(dVibOn, dVibOff, nVib);
     }
-  } else if (strcmp(cmd, "sensors!") == 0) { // getter
+  } else if (strcmp(cmd, "sensors!") == 0) {
     controller->setSendSerialSensors(inputCommand[1].toInt() != 0);
   } else if (strcmp(cmd, "address?") == 0) {
     // send ip address
     controller->sendSerialIPAddress();
+  } else if (strcmp(cmd, "wifi!") == 0) { // 
+    controller->setWiFi(inputCommand[1].toInt() != 0);
   }
 }
 

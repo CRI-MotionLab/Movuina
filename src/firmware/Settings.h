@@ -26,6 +26,10 @@ private:
   bool sendOSCSensors;
   bool sendSerialSensors;
 
+  // todo: r/w from EEPROM ?
+  bool sendOSCHeartBeat;
+  bool sendSerialHeartBeat;
+
 public:
   Settings() {
     strcpy(init, "uninitialized");
@@ -37,6 +41,8 @@ public:
     portOut = 8001;
     sendOSCSensors = true;
     sendSerialSensors = true;
+    sendOSCHeartBeat = false;
+    sendSerialHeartBeat = true;
     
     EEPROM.begin(512);
   }
@@ -52,6 +58,8 @@ public:
   unsigned int getPortOut() { return portOut; }
   bool getSendOSCSensors() { return sendOSCSensors; }
   bool getSendSerialSensors() { return sendSerialSensors; }
+  bool getSendOSCHeartBeat() { return sendOSCHeartBeat; }
+  bool getSendSerialHeartBeat() { return sendSerialHeartBeat; }
 
   void setID(const char *i) { strcpy(id, i); }
   void setSSID(const char *s) { strcpy(ssid, s); }
@@ -61,6 +69,8 @@ public:
   void setPortOut(unsigned int p) { portOut = p; }
   void setSendOSCSensors(bool b) { sendOSCSensors = b; }
   void setSendSerialSensors(bool b) { sendSerialSensors = b; }
+  void setSendOSCHeartBeat(bool b) { sendOSCHeartBeat = b; }
+  void setSendSerialHeartBeat(bool b) { sendSerialHeartBeat = b; }
 
   //======================== CREDENTIALS MANAGEMENT ==========================//
 

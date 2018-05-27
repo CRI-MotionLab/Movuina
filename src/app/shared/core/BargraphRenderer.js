@@ -20,8 +20,19 @@ class BargraphRenderer extends Canvas2DRenderer {
     for (var i = 0; i < this.data.length; i++) {
       ctx.fillStyle = this.colors[i % this.colors.length];
       var x = i * w;
-      var y = this.data[i] * c.height;
-      ctx.fillRect(x, y, w, c.height);
+
+      // we assume the data is signed
+      if (this.data[i] > 0) {
+        var y = (1 - this.data[i]) * c.height * 0.5;
+        var h = this.data[i] * c.height * 0.5;
+      } else {
+        var y = c.height * 0.5;
+        var h = -this.data[i] * c.height * 0.5;
+      }
+      ctx.fillRect(x, y, w, h);
+
+      //var y = this.data[i] * c.height;
+      //ctx.fillRect(x, y, w, c.height);
     }
   }
 };

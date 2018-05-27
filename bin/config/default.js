@@ -77,8 +77,11 @@ const config = {
     //--------------------------------- servers ------------------------------//
 
     oscServer: {
-      portIn: 9000,
-      portOut: 8000,
+      localAddress: '127.0.0.1',
+      // localAddress: '192.168.0.12',
+      localPort: 9001,
+      remoteAddress: '192.168.0.101', // whatever, will be updated
+      remotePort: 9000,
     },
 
     webServer: {

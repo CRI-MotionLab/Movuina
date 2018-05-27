@@ -12,17 +12,20 @@
   "author": "Joseph Larralde",
   "license": "ISC",
   "dependencies": {
+    "@ircam/ticker": "1.0.6",
     "colors": "^1.1.2",
     "compression": "^1.7.2",
     "ejs": "^2.5.8",
     "express": "^4.16.2",
     "fs-extra": "^5.0.0",
+    "lfo-motion": "github:ircam-rnd/lfo-motion",
     "marked": "^0.3.17",
     "mustache": "^2.3.0",
     "osc": "^2.2.0",
     "serialport": "^6.1.1",
     "serve-favicon": "^2.4.5",
-    "uglify-js": "^3.3.14"
+    "uglify-js": "^3.3.14",
+    "waves-lfo": "1.1.6"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",

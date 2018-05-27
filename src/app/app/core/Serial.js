@@ -11,8 +11,10 @@ class Serial extends EventEmitter {
     this.message = '';
   }
 
-  executeMovuinoCommand(cmd, arg) {
+  executeMovuinoCommand(cmd, args = []) {
     if (!this.port) return;
+
+    console.log('executing command ' + cmd + ' with args ' + args);
 
     // using the provided firmware, messages must be formatted like this :
     // STX<cmd_str>STX<arg1_str>STX<arg2_str>...<argn_str>ETX
@@ -24,12 +26,12 @@ class Serial extends EventEmitter {
 
     let message = String.fromCharCode(2) + cmd;
 
-    if (Array.isArray(arg)) {
-      for (let i = 0; i < arg.length; i++) {
-        message += String.fromCharCode(2) + arg[i];
+    if (Array.isArray(args)) {
+      for (let i = 0; i < args.length; i++) {
+        message += String.fromCharCode(2) + args[i];
       }
     } else {
-      message += String.fromCharCode(2) + arg;
+      message += String.fromCharCode(2) + args;
     }
 
     message += String.fromCharCode(3);
@@ -41,6 +43,16 @@ class Serial extends EventEmitter {
       serial.list()
       .then(p => {
         this.ports = p;
+
+        try {
+          console.log('closing current serial port');
+          this.port.close(() => {
+            this.port = null;
+          });
+        } catch (e) {
+          // don't care
+        }
+
         this.emit('ports', p);
       })
       .catch(err => {
@@ -72,22 +84,24 @@ class Serial extends EventEmitter {
       } else {
         console.log('opened serial port :');
         console.log(p);
-        this.executeMovuinoCommand('settings!', [ 'me', 'XXXX-147e', 'password', '192.168.0.2', '9000', '9001' ]);
+        // this.executeMovuinoCommand('settings!', [ 'me', 'XXXX-147e', 'password', '192.168.0.2', '9000', '9001' ]);
+        // this.executeMovuinoCommand('settings?');
+        this.executeMovuinoCommand('?');
       }
     });
 
     this.port.on('data', (data) => {
-      this._parseMovuinoData(data.toString());
+      this._parseSerialData(data.toString());
     });
   }
 
-  _parseMovuinoData(str) {
+  _parseSerialData(str) {
     for (let i = 0; i < str.length; i++) {
       if (this.receiving) {
         if (str.charCodeAt(i) === 3) {
           this.receiving = false;
           const cmd = this.message.split(String.fromCharCode(2));
-          this._processMovuinoData(cmd.splice(0, 1), cmd);
+          this._processSerialData(cmd.splice(0, 1)[0], cmd);
           this.message = '';
         } else {
           this.message += str.charAt(i);
@@ -100,10 +114,19 @@ class Serial extends EventEmitter {
     }
   }
 
-  _processMovuinoData(cmd, args) {
-    console.log('received movuino message');
-    console.log('command : ' + cmd);
-    console.log('args : ' + args);
+  _processSerialData(cmd, args) {
+    if (cmd === 'movuino') {
+      this.executeMovuinoCommand('settings?');
+    }
+
+    this.emit('movuino', cmd, args);
+
+    if (cmd !== 'sensors' && cmd !== 'heartbeat') {
+      console.log('received movuino message');
+      console.log('command : ' + cmd);
+      console.log('args : ' + args);
+    }
+
   }
 };
 

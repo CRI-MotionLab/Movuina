@@ -20,6 +20,7 @@ Controller::init(SerialCLI *s, OSCServer *o) {
   // outgoing messages:
   sprintf(oscAddresses[oscAddrSensors], "/%s/sensors\0", getID());
   sprintf(oscAddresses[oscAddrSettings], "/%s/settings\0", getID());
+  sprintf(oscAddresses[oscAddrHeartBeat], "/%s/heartbeat\0", getID());
 
   // incoming messages:
   sprintf(oscAddresses[oscAddrVibroPulse], "/%s/vibroPulse\0", getID());
@@ -31,12 +32,23 @@ Controller::init(SerialCLI *s, OSCServer *o) {
 void
 Controller::update() {
   unsigned long now = millis();
-  if (now >= lastHeartBeatDate + heartBeat) {
+  
+  if (now >= lastHeartBeatDate + heartBeatPeriod) {
     lastHeartBeatDate = now;
-    // call whatever periodic process you like, e.g:
-    // String cmd = "mac address";
-    // String mac = oscServer->getMacAddress();
-    // serialCLI->sendMessage(cmd, mac);
+
+    // call whatever periodic process you like
+
+    if (getSendOSCHeartBeat()) {
+      sendOSCHeartBeat();
+    }
+
+    if (getSendSerialHeartBeat()) {
+      sendSerialHeartBeat();
+    }
+  }
+
+  if (now >= lastReadMagDate + readMagPeriod) {
+    lastReadMagDate = now;
     readMagnetometerValues();
   }
   
@@ -45,8 +57,17 @@ Controller::update() {
   updateVibrator();
   updateButton();
 
-  // THIS IS THE ONLY AUTHORIZED DELAY
+  // THIS IS THE ONLY AUTHORIZED DELAY IN THE MAIN LOOP !
   delay(framePeriod);
+}
+
+void
+Controller::setWiFi(bool on) {
+  if (on) {
+    oscServer->awakeWiFi();
+  } else {
+    oscServer->shutdownWiFi();
+  }
 }
 
 //============================= OSC ===============================//
@@ -93,10 +114,13 @@ Controller::oscErrorCallback(OSCMessage &msg) {
 bool
 Controller::sendOSCSettings() {
   if (initialized) {
+    /*
     String address("/");
     address += getID();
     address += "/settings";
     OSCMessage msg(address.c_str()); // create an OSC message on address "/<id>/settings"
+    */
+    OSCMessage msg(oscAddresses[oscAddrSettings]);
     msg.add(getID());
     msg.add(getSSID());
     msg.add(getPass());
@@ -111,14 +135,29 @@ Controller::sendOSCSettings() {
 
 bool
 Controller::sendOSCSensors() {
-  if (initialized && !digitalRead(pinVibro)) {
+  if (initialized /* && !digitalRead(pinVibro) */) {
+    /*
     String address("/");
     address += getID();
     address += "/sensors";
     OSCMessage msg(address.c_str()); // create an OSC message on address "/<id>/sensors"
+    */
+    OSCMessage msg(oscAddresses[oscAddrSensors]);
     for (int i = 0; i < 9; i++) {
       msg.add(sensors[i]);
     }
+    return sendOSCMessage(msg);
+  }
+
+  return false;
+}
+
+bool
+Controller::sendOSCHeartBeat() {
+  if (initialized) {
+    OSCMessage msg(oscAddresses[oscAddrHeartBeat]);
+    msg.add(oscServer->getWiFiState() ? "1" : "0");
+    msg.add(oscServer->getStringIPAddress().c_str());
     return sendOSCMessage(msg);
   }
 
@@ -182,6 +221,7 @@ Controller::sendSerialIPAddress() {
   if (initialized) {
     int ip[4];
     oscServer->getIPAddress(&ip[0]);
+    /*
     String sip = String(ip[0]);
     sip += ".";
     sip += ip[1];
@@ -189,6 +229,8 @@ Controller::sendSerialIPAddress() {
     sip += ip[2];
     sip += ".";
     sip += ip[3];
+    */
+    String sip = String(ip[0]) + "." + ip[1] + "." + ip[2] + "." + ip[3];
     String address("ip");
     serialCLI->sendMessage(address, sip);
   }
@@ -225,6 +267,22 @@ Controller::sendSerialSensors() {
 }
 
 bool
+Controller::sendSerialHeartBeat() {
+  if (initialized) {
+    const char *heartbeat[] = {
+      "heartbeat",
+      oscServer->getWiFiState() ? "1" : "0",
+      oscServer->getStringIPAddress().c_str()
+    };
+
+    // send "heartbeat <wifi_connected> <movuino_ip_address>" every second
+    serialCLI->sendData((char **)heartbeat, 3);
+  }
+
+  return initialized;
+}
+
+bool
 Controller::setSerialSettings(String *parameters, int nbArguments) {
   if (initialized) {
     bool autoResetWiFi = false;
@@ -255,7 +313,7 @@ Controller::setSerialSettings(String *parameters, int nbArguments) {
     
     storeCredentials();
     
-    if (autoResetWiFi) {
+    if (autoResetWiFi && WiFi.status() != WL_CONNECTED) {
       // oscServer->startWiFi();
       oscServer->shutdownWiFi();
       oscServer->awakeWiFi();

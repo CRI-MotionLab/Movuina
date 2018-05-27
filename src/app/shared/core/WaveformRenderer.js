@@ -16,6 +16,9 @@ class WaveformRenderer extends Canvas2DRenderer {
 
     this.dimension = 3;
 
+    this.minInput = -1;
+    this.maxInput = 1;
+
     // TODO :
     // this.filterFreq = 0;
 
@@ -25,9 +28,29 @@ class WaveformRenderer extends Canvas2DRenderer {
       this.buffer.push([]);
 
       for (let j = 0; j < this.dimension; j++) {
-        this.buffer[i].push(0);
+        this.buffer[i].push(0.5);
       }
     }
+
+    this.rendered = false;
+  }
+
+  setData(data) {
+    if (!data) return;
+
+    if (!this.rendered) return;
+    this.rendered = false;
+
+    this.buffer.splice(0, 1);
+
+    for (let k = 0; k < this.dimension; k++) {
+      data[k] = Math.min(Math.max(data[k], this.minInput), this.maxInput);
+      data[k] -= this.minInput;
+      data[k] /= (this.maxInput - this.minInput);
+      data[k] = 1 - data[k];
+    }
+
+    this.buffer.push(data);
   }
 
   get zoom() {
@@ -39,13 +62,7 @@ class WaveformRenderer extends Canvas2DRenderer {
     this.resolution = parseInt((1 - this.zoomValue) * (this.maxRes - this.minRes) + this.minRes);
   }
 
-  // originally drawMultislider
   _render() {
-    if (!this.data) return;
-
-    this.buffer.splice(0, 1);
-    this.buffer.push(this.data);
-
     const ctx = this.$ctx;
     const c = this.$canvas;
     const bpf = this.buffer;
@@ -100,6 +117,8 @@ class WaveformRenderer extends Canvas2DRenderer {
         }
       }
     }
+
+    this.rendered = true;
   }
 };
 

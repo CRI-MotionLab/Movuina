@@ -16,12 +16,13 @@ class Controller;
 
 class OSCServer {
 private:
+  bool initialized;
   WiFiUDP udp;
   Controller *controller;
 
 public:
   OSCServer(Controller *c) :
-  controller(c) {
+  initialized(false), controller(c) {
   }
 
   ~OSCServer() {}
@@ -30,7 +31,9 @@ public:
   bool sendOSCMessage(OSCMessage &msg, const char *hostIP, unsigned int portOut);
   String getMacAddress();
   void getIPAddress(int *res); // res must be of type int[4]
+  String getStringIPAddress();
 
+  bool getWiFiState();
   void startWiFi();
   void shutdownWiFi();
   void awakeWiFi();

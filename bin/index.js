@@ -185,6 +185,8 @@ function watchSource() {
   const onAssetsChange = function(f, src, dist) {
     logger.startTwirling();
 
+    const task = `copying file ${f} to ${f.replace(src, dist)}`;
+    logger.notifyStartTask(task);
     fs.copy(f, f.replace(src, dist))
     .then(function() {
       logger.stopTwirling();
