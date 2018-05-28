@@ -368,6 +368,14 @@ div#movuino-osc-flow-representations-container-post {
   padding: 0;
 }
 
+div#movuino-osc-flow-representations-contents {
+  position: relative;
+  width: 100%;
+  height: auto;
+  padding: 0;
+  /*height: 120px;*/
+}
+
 div.right-arrow-overlay {
   position: relative;
   width: 100%;
@@ -378,22 +386,42 @@ div.right-arrow-overlay {
 div.local-osc-connection {
   position: absolute;
   top: 50%;
-  right: 0px;
   display: block;
+  padding: 0 !important;
+
+  &.left { right: -69px; }
+  &.right { right: -91px; }
+}
+
+div.local-osc-flow-representations-container-pre {
+  position: relative;
   padding: 0 !important;
 }
 
-// div.local-osc-connection {
-//   position: absolute;
-//   display: block;
-//   padding: 0 !important;
-// }
+div.local-osc-flow-representations-container {
+  position: relative;
+  // top: 50%;
+  top: -10px;
+  left: -20px;
+  padding: 0 !important;
+  padding-left: 5px !important;
+}
 
-div.local-osc-flow-representations-container,
-div.local-osc-flow-representations-container-pre {
-  // div#local-osc-flow-representations-container-post {
-  // position: absolute;
-  // padding: 0;
+div.local-osc-flow-representations-contents {
+  position: absolute;
+  padding: 0 !important;
+
+  div { padding: 0; }
+}
+
+// todo: delete if not needed
+
+div.local-osc-flow-input-messages {
+
+}
+
+div.local-osc-flow-output-messages {
+
 }
 
 div.osc-arrow {
@@ -439,30 +467,21 @@ div#osc-from-app-vertical {
 //----------------------------------------------------------------------------//
 
 div.osc-to-app-horizontal {
-  top: 0%;
+  top: 0;
   margin-top: -50px !important;
-  right: -69px;
+  right: 0; //-69px;
 
   background: url($whiteLeftArrowPath) no-repeat;
   background-size: 100px 100px;
 }
 
 div.osc-from-app-horizontal {
-  top: 0%;
+  top: 0;
   margin-top: -50px !important;
-  right: -91px;
+  right: 0; //-91px;
 
   background: url($blueRightArrowPath) no-repeat;
   background-size: 100px 100px;
-}
-
-div#movuino-osc-flow-representations-contents,
-div.local-osc-flow-representations-contents {
-  position: relative;
-  width: 100%;
-  height: auto;
-  padding: 0;
-  /*height: 120px;*/
 }
 
 div.osc-messages {
@@ -483,15 +502,6 @@ div#movuino-osc-flow-input-messages {
 div#movuino-osc-flow-output-messages {
   right: 0;
 }
-
-div.local-osc-flow-input-messages {
-
-}
-
-div.local-osc-flow-output-messages {
-
-}
-
 
 /* DATA */
 
