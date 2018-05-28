@@ -21,6 +21,8 @@ $blueDownArrowPath: $mediaPath + 'Icon_Arrow1-01.png';
 $whiteUpArrowPath: $mediaPath + 'Icon_Arrow2-01.png';
 $whiteDownArrowPath: $mediaPath + 'Icon_Arrow2-02.png';
 $blueUpArrowPath: $mediaPath + 'Icon_Arrow1-02.png';
+$blueRightArrowPath: $mediaPath + 'Icon_Arrow1-03.png';
+$whiteLeftArrowPath: $mediaPath + 'Icon_Arrow2-03.png';
 
 $fontFamily: LatoLatinoWeb, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -357,13 +359,41 @@ input.small-number {
   width: 40px;
 }
 
-/* OSC CONNECTION */
+/* OSC CONNECTIONS */
 
-div#osc-flow-representations-container,
-div#osc-flow-representations-container-pre,
-div#osc-flow-representations-container-post {
+div#movuino-osc-flow-representations-container,
+div#movuino-osc-flow-representations-container-pre,
+div#movuino-osc-flow-representations-container-post {
   position: relative;
   padding: 0;
+}
+
+div.right-arrow-overlay {
+  position: relative;
+  width: 100%;
+  display: block;
+  padding: 0 !important;
+}
+
+div.local-osc-connection {
+  position: absolute;
+  top: 50%;
+  right: 0px;
+  display: block;
+  padding: 0 !important;
+}
+
+// div.local-osc-connection {
+//   position: absolute;
+//   display: block;
+//   padding: 0 !important;
+// }
+
+div.local-osc-flow-representations-container,
+div.local-osc-flow-representations-container-pre {
+  // div#local-osc-flow-representations-container-post {
+  // position: absolute;
+  // padding: 0;
 }
 
 div.osc-arrow {
@@ -374,7 +404,7 @@ div.osc-arrow {
   height: 100px;
 }
 
-div#osc-from-movuino {
+div#osc-from-movuino-vertical {
   left: 25%;
   margin-left: -50px !important;
   top: -40px;
@@ -382,7 +412,7 @@ div#osc-from-movuino {
   background-size: 100px 100px;
 }
 
-div#osc-to-movuino {
+div#osc-to-movuino-vertical {
   right: 25%;
   margin-right: -50px !important;
   top: -61px;
@@ -390,7 +420,7 @@ div#osc-to-movuino {
   background-size: 100px 100px;
 }
 
-div#osc-to-computer {
+div#osc-to-app-vertical {
   left: 25%;
   margin-left: -50px !important;
   top: -40px;
@@ -398,7 +428,7 @@ div#osc-to-computer {
   background-size: 100px 100px;
 }
 
-div#osc-from-computer {
+div#osc-from-app-vertical {
   right: 25%;
   margin-right: -50px !important;
   top: -61px;
@@ -406,7 +436,28 @@ div#osc-from-computer {
   background-size: 100px 100px;
 }
 
-div#osc-flow-representations-contents {
+//----------------------------------------------------------------------------//
+
+div.osc-to-app-horizontal {
+  top: 0%;
+  margin-top: -50px !important;
+  right: -69px;
+
+  background: url($whiteLeftArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div.osc-from-app-horizontal {
+  top: 0%;
+  margin-top: -50px !important;
+  right: -91px;
+
+  background: url($blueRightArrowPath) no-repeat;
+  background-size: 100px 100px;
+}
+
+div#movuino-osc-flow-representations-contents,
+div.local-osc-flow-representations-contents {
   position: relative;
   width: 100%;
   height: auto;
@@ -425,13 +476,22 @@ div.osc-messages {
   // font-size: 0.8em;
 }
 
-div#osc-flow-input-messages {
+div#movuino-osc-flow-input-messages {
   left: 0;
 }
 
-div#osc-flow-output-messages {
+div#movuino-osc-flow-output-messages {
   right: 0;
 }
+
+div.local-osc-flow-input-messages {
+
+}
+
+div.local-osc-flow-output-messages {
+
+}
+
 
 /* DATA */
 
@@ -445,11 +505,11 @@ div#data-visualization {
   }
 }
 
-div#visual-render-modulation {
+div#data-visualization-controls {
   width: 50%;
 }
 
-div#data-sensors {
+div#data-visualization-sensors {
   width: 50%;
 }
 
@@ -458,7 +518,7 @@ div#data-visualization {
   position: relative;
 }
 
-div#visual-render-modulation {
+div#data-visualization-controls {
   position: absolute;
   left: 0;
   width: 20%;

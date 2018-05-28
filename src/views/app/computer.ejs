@@ -7,197 +7,223 @@
   <div id="movuino-interaction" class="section-container">
     <h2> Movuino interaction </h2>
 
-    <div id="" class="section-subcontainer">
-      <h3> Vibrator </h3>
+    <div class="right-arrow-overlay">
 
-      <div>
-        Pulsations
-      </div>
-      <div>
-        <button class="blue-yellow-squared-toggle" id="movuino-interaction-vibrations-toggle">OFF</button>
-      </div>
-      <div>
-        Activate vibrations
-      </div>
-      <div>
-        <div class="inline third">
-          <div class="subtle"> on </div>
-          <div class="subtle">
-            <input type="number" id="movuino-interaction-vibrations-on-duration">
-          </div>
-          <div class="subtle"> ms </div>
+      <!-- adding the "inline" class here makes a smaller white block when window is large enough -->
+      <div id="movuino-vibrator-control" class="section-subcontainer">
+        <h3> Vibrator </h3>
+
+        <div>
+          Pulsations
         </div>
-        <div class="inline third">
-          <div class="subtle"> off </div>
-          <div class="subtle">
-            <input type="number" id="movuino-interaction-vibrations-off-duration">
-          </div>
-          <div class="subtle"> ms </div>
+        <div>
+          <button class="blue-yellow-squared-toggle" id="movuino-interaction-vibrations-toggle">OFF</button>
         </div>
-        <div class="inline third">
-          <div class="subtle"> repetitions </div>
-          <div class="subtle">
-            <input type="number" id="movuino-interaction-vibrations-repetitions">
+        <div>
+          Activate vibrations
+        </div>
+        <div>
+          <div class="inline third">
+            <div class="subtle"> on </div>
+            <div class="subtle">
+              <input type="number" id="movuino-interaction-vibrations-on-duration">
+            </div>
+            <div class="subtle"> ms </div>
           </div>
-          <div class="subtle"> times </div>
+          <div class="inline third">
+            <div class="subtle"> off </div>
+            <div class="subtle">
+              <input type="number" id="movuino-interaction-vibrations-off-duration">
+            </div>
+            <div class="subtle"> ms </div>
+          </div>
+          <div class="inline third">
+            <div class="subtle"> repetitions </div>
+            <div class="subtle">
+              <input type="number" id="movuino-interaction-vibrations-repetitions">
+            </div>
+            <div class="subtle"> times </div>
+          </div>
+        </div>
+        <div>
+          <button class="blue-yellow-squared-toggle" id="movuino-interaction-vibrations-pulse">Pulse</button>
         </div>
       </div>
-      <div>
-        <button class="blue-yellow-squared-toggle" id="movuino-interaction-vibrations-pulse">Pulse</button>
-      </div>
-    </div>
+
+      <%- include('./local-osc-connection', { direction: 'left', id: 'local-osc-input-messages-1'}) %>
+
+    </div> <!-- right-arrow-overlay -->
   </div>
 
   <div id="data-visualization" class="section-container">
     <h2> Data visualization </h2>
 
-    <div class="section-flex">
-    <!-- <div> -->
-      <div id="visual-render-modulation" class="section-subcontainer inline">
-        <h3> Visual render </h3>
+    <div class="right-arrow-overlay">
 
-        <div>
+      <div class="section-flex">
+      <!-- <div> -->
+        <div id="data-visualization-controls" class="section-subcontainer inline">
+          <h3> Visual render </h3>
+
           <div>
-            <div class="subtle"> Zoom </div>
-            <input type="range" id="zoom-slider">
+            <div>
+              <div class="subtle"> Zoom </div>
+              <input type="range" id="zoom-slider">
+            </div>
+            <div>
+              <div class="subtle"> Render </div>
+              <div class="menu-wrapper dark-grey inline reset">
+                <select id="line-style-menu">
+                  <option value="curve">Curve</option>
+                  <option value="line">Line</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="subtle"> Point </div>
+              <div class="menu-wrapper dark-grey inline reset">
+                <select id="point-style-menu">
+                  <option value="none">None</option>
+                  <option value="points">Points</option>
+                </select>
+              </div>
+            </div>
+            <div>
+              <div class="subtle"> Line width </div>
+              <input type="range" id="line-width-slider">
+            </div>
           </div>
+
+          <h3> Modulation </h3>
+
           <div>
-            <div class="subtle"> Render </div>
-            <div class="menu-wrapper dark-grey inline reset">
-              <select id="line-style-menu">
-                <option value="curve">Curve</option>
-                <option value="line">Line</option>
-              </select>
+            <div>
+              <div class="subtle"> Resampling frequency </div>
+              <input type="range" id="resampling-frequency-slider">
+            </div>
+            <div>
+              <div class="subtle"> Lowpass filter window size </div>
+              <input type="range" id="filter-size-slider">
             </div>
           </div>
+        </div> <!-- visual render -->
+
+        <div id="data-visualization-sensors" class="section-subcontainer inline has-right-arrow">
+          <h3> Data sensors </h3>
+
           <div>
-            <div class="subtle"> Point </div>
-            <div class="menu-wrapper dark-grey inline reset">
-              <select id="point-style-menu">
-                <option value="none">None</option>
-                <option value="points">Points</option>
-              </select>
-            </div>
+            <div class="subtle"> Accelerometer </div>
+            <canvas id="movuino-accelerometer-waveforms"></canvas>
+            <!-- <div> -->
+              <div class="inline third">
+                X <div class="dimension-label light-yellow inline" id="accel-x-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Y <div class="dimension-label light-blue" id="accel-y-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Z <div class="dimension-label light-red" id="accel-z-waveform-label">0.</div>
+              </div>
+            <!-- </div> -->
           </div>
+
           <div>
-            <div class="subtle"> Line width </div>
-            <input type="range" id="line-width-slider">
+            <div class="subtle"> Gyroscope </div>
+            <canvas id="movuino-gyroscope-waveforms"></canvas>
+            <!-- <div> -->
+              <div class="inline third">
+                X <div class="dimension-label light-yellow" id="gyro-x-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Y <div class="dimension-label light-blue" id="gyro-y-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Z <div class="dimension-label light-red" id="gyro-z-waveform-label">0.</div>
+              </div>
+            <!-- </div> -->
           </div>
-        </div>
 
-        <h3> Modulation </h3>
-
-        <div>
           <div>
-            <div class="subtle"> Resampling frequency </div>
-            <input type="range" id="resampling-frequency-slider">
+            <div class="subtle"> Magnetometer </div>
+            <canvas id="movuino-magnetometer-waveforms"></canvas>
+            <!-- <div> -->
+              <div class="inline third">
+                X <div class="dimension-label light-yellow" id="magneto-x-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Y <div class="dimension-label light-blue" id="magneto-y-waveform-label">0.</div>
+              </div>
+              <div class="inline third">
+                Z <div class="dimension-label light-red" id="magneto-z-waveform-label">0.</div>
+              </div>
+            <!-- </div> -->
           </div>
-          <div>
-            <div class="subtle"> Lowpass filter window size </div>
-            <input type="range" id="filter-size-slider">
-          </div>
-        </div>
-      </div> <!-- visual render -->
+        </div> <!-- data sensors -->
+      </div> <!-- section flex -->
 
-      <div id="data-sensors" class="section-subcontainer inline">
-        <h3> Data sensors </h3>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-1'}) %>
 
-        <div>
-          <div class="subtle"> Accelerometer </div>
-          <canvas id="movuino-accelerometer-waveforms"></canvas>
-          <!-- <div> -->
-            <div class="inline third">
-              X <div class="dimension-label light-yellow inline" id="accel-x-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Y <div class="dimension-label light-blue" id="accel-y-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Z <div class="dimension-label light-red" id="accel-z-waveform-label">0.</div>
-            </div>
-          <!-- </div> -->
-        </div>
-
-        <div>
-          <div class="subtle"> Gyroscope </div>
-          <canvas id="movuino-gyroscope-waveforms"></canvas>
-          <!-- <div> -->
-            <div class="inline third">
-              X <div class="dimension-label light-yellow" id="gyro-x-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Y <div class="dimension-label light-blue" id="gyro-y-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Z <div class="dimension-label light-red" id="gyro-z-waveform-label">0.</div>
-            </div>
-          <!-- </div> -->
-        </div>
-
-        <div>
-          <div class="subtle"> Magnetometer </div>
-          <canvas id="movuino-magnetometer-waveforms"></canvas>
-          <!-- <div> -->
-            <div class="inline third">
-              X <div class="dimension-label light-yellow" id="magneto-x-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Y <div class="dimension-label light-blue" id="magneto-y-waveform-label">0.</div>
-            </div>
-            <div class="inline third">
-              Z <div class="dimension-label light-red" id="magneto-z-waveform-label">0.</div>
-            </div>
-          <!-- </div> -->
-        </div>
-
-      </div> <!-- data sensors -->
-    </div> <!-- section flex -->
+    </div> <!-- right-arrow-overlay -->
   </div> <!-- data visualization -->
 
-  <div id="data-analysis" class="section-container">
+  <div id="data-analysis-repetitions" class="section-container">
     <h2> Data analysis </h2>
 
-    <div id="repetitions" class="section-subcontainer">
-      <h3> Repetitions </h3>
+    <div class="right-arrow-overlay">
+      <div id="repetitions" class="section-subcontainer">
+        <h3> Repetitions </h3>
 
-      <div id="sensor-repetitions">
+        <div id="sensor-repetitions">
 
-        <div id="movuino-accelerometer-repetitions" class="inline third">
-          <div class="thin">
-            <canvas id="movuino-accelerometer-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset yellow"></div>
+          <div id="movuino-accelerometer-repetitions" class="inline third">
+            <div class="thin">
+              <canvas id="movuino-accelerometer-repetitions-canvas"></canvas>
+              <div class="sensor-repetitions reset yellow"></div>
+            </div>
+            <div class="subtle">Accelerometer</div>
           </div>
-          <div class="subtle">Accelerometer</div>
+
+          <div id="movuino-gyroscope-repetitions" class="inline third">
+            <div class="thin">
+              <canvas id="movuino-gyroscope-repetitions-canvas"></canvas>
+              <div class="sensor-repetitions reset blue"></div>
+            </div>
+            <div class="subtle">Gyroscope</div>
+          </div>
+
+          <div id="movuino-magnetometer-repetitions" class="inline third">
+            <div class="thin">
+              <canvas id="movuino-magnetometer-repetitions-canvas"></canvas>
+              <div class="sensor-repetitions reset red"></div>
+            </div>
+            <div class="subtle">Magnetometer</div>
+          </div>
+
         </div>
 
-        <div id="movuino-gyroscope-repetitions" class="inline third">
-          <div class="thin">
-            <canvas id="movuino-gyroscope-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset blue"></div>
-          </div>
-          <div class="subtle">Gyroscope</div>
+        <div>
         </div>
+      </div> <!-- repetitions -->
 
-        <div id="movuino-magnetometer-repetitions" class="inline third">
-          <div class="thin">
-            <canvas id="movuino-magnetometer-repetitions-canvas"></canvas>
-            <div class="sensor-repetitions reset red"></div>
-          </div>
-          <div class="subtle">Magnetometer</div>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-2'}) %>
+
+    </div> <!-- right-arrow-overlay -->
+  </div>
+
+  <div id="data-analysis-gesture-recognition" class="section-container">
+
+    <div class="right-arrow-overlay">
+      <div id="xmm" class="section-subcontainer">
+        <h3> XMM </h3>
+
+        <div>
         </div>
+      </div> <!-- xmm -->
 
-      </div>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-3'}) %>
 
-      <div>
-      </div>
-    </div>
-
-    <div id="xmm" class="section-subcontainer">
-      <h3> XMM </h3>
-
-      <div>
-      </div>
-    </div>
+    </div> <!-- right-arrow-overlay -->
   </div>
 
 </div> <!-- computer -->
+
