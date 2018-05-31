@@ -22,6 +22,7 @@ class BaseOSCServer extends EventEmitter {
 
   restart(args) {
     Object.assign(this.config, args);
+    // console.log(JSON.stringify(args, null, 2));
     // console.log(JSON.stringify(this.config, null, 2));
 
     if (this.server !== null && this.ready) {
@@ -61,7 +62,11 @@ class BaseOSCServer extends EventEmitter {
 
       for (let i = 0; i < args.length; i++) {
         if (typeof args[i] === 'number') {
-          msg.args.push({ type: 'f', value: args[i] });
+          if (Number.isInteger(args[i])) {
+            msg.args.push({ type: 'i', value: args[i] });
+          } else {
+            msg.args.push({ type: 'f', value: args[i] });
+          }
         } else if (typeof args[i] === 'string') {
           msg.args.push({ type: 's', value: args[i] });
         } else {
@@ -117,7 +122,7 @@ class OSCServer extends EventEmitter {
       this.emit('renderer', 'display', { target: 'movOut', msg: msg });
     });
 
-    this.receive('movuino', '/vibroPulse', (msg) => {
+    this.receive('movuino', '/vibroNow', (msg) => {
       this.emit('renderer', 'display', { target: 'movOut', msg: msg });
     });
 

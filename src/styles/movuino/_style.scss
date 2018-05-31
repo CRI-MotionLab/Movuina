@@ -137,9 +137,20 @@ button.blue-yellow-squared-toggle {
   background-color: $darkBlue;
 }
 
-button.blue-yellow-squared-toggle.active {
+button.blue-yellow-squared-toggle.on,
+// button#movuino-interaction-vibrator-on-off.on,
+// button#movuino-interaction-pulse-trig-btn.on,
+button#movuino-interaction-pulse-trig-btn:active {
   color: $darkBlue;
   background-color: $lightYellow;
+}
+
+button#movuino-interaction-vibrator-on-off::after {
+  content: 'OFF';
+}
+
+button#movuino-interaction-vibrator-on-off.on::after {
+  content: 'ON';
 }
 
 button:focus, select:focus, input:focus {

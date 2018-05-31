@@ -22,6 +22,16 @@ class Computer extends EventEmitter {
     this.resamplingFrequency = 30; // Hz
     this.filterSize = 1; // pts
 
+    this.onVibroNow = this.onVibroNow.bind(this);
+    this.onVibroPulse = this.onVibroPulse.bind(this);
+
+    this.onZoomSliderValueChanged = this.onZoomSliderValueChanged.bind(this);
+    this.onLineWidthSliderValueChanged = this.onLineWidthSliderValueChanged.bind(this);
+    this.onLineStyleMenuValueChanged = this.onLineStyleMenuValueChanged.bind(this);
+    this.onPointStyleMenuValueChanged = this.onPointStyleMenuValueChanged.bind(this);
+    this.onResamplingFrequencySliderValueChanged = this.onResamplingFrequencySliderValueChanged.bind(this);
+    this.onFilterSizeSliderValueChanged = this.onFilterSizeSliderValueChanged.bind(this);
+
     this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
     this.displayBridgeCallback = this.displayBridgeCallback.bind(this);
     this.rawBridgeCallback = this.rawBridgeCallback.bind(this);
@@ -91,6 +101,7 @@ class Computer extends EventEmitter {
 
     this.mvAvrg.connect(this.displayResampler);
     this.displayResampler.connect(this.displayBridge);
+    // this.mvAvrg.connect(this.displayBridge);
 
     this.mvAvrg.connect(this.rawBridge);
 
@@ -120,6 +131,37 @@ class Computer extends EventEmitter {
   }
 
   init() {
+    this.$vibroOnOff = document.querySelector('#movuino-interaction-vibrator-on-off');
+    this.$vibroPulseOnDuration = document.querySelector('#movuino-interaction-pulse-on-duration');
+    this.$vibroPulseOffDuration = document.querySelector('#movuino-interaction-pulse-off-duration');
+    this.$vibroPulseNbRepetitions = document.querySelector('#movuino-interaction-pulse-nb-repetitions');
+    this.$vibroPulseTrigBtn = document.querySelector('#movuino-interaction-pulse-trig-btn');
+
+    this.$vibroOnOff.addEventListener('click', () => {
+      const on = this.$vibroOnOff.classList.toggle('on');
+      if (on) {
+        this.onVibroNow([ 1 ]);
+      } else {
+        this.onVibroNow([ 0 ]);
+      }
+    });
+
+    this.$vibroPulseTrigBtn.addEventListener('click', () => {
+      const onDur = parseInt(this.$vibroPulseOnDuration.value);
+      const offDur = parseInt(this.$vibroPulseOffDuration.value);
+      const nbRepetitions = parseInt(this.$vibroPulseNbRepetitions.value);
+
+      const data = [
+        isNaN(onDur) ? 0 : onDur,
+        isNaN(offDur) ? 0 : offDur,
+        isNaN(nbRepetitions) ? 0 : nbRepetitions,
+      ];
+
+      this.onVibroPulse(data);
+    });
+
+    // DATA VISUALIZATION :
+
     this.$sensorWaveforms = [
       document.querySelector('#movuino-accelerometer-waveforms'),
       document.querySelector('#movuino-gyroscope-waveforms'),
@@ -187,10 +229,29 @@ class Computer extends EventEmitter {
           }
 
           this.eventIn.process(0, this.sensorsData);
-        } else if (data.target === 'vibroPulse') {
-
         } else if (data.target === 'vibroNow') {
+          if (data.msg.args[0] === 1) {
+            if (!this.$vibroOnOff.classList.contains('on')) {
+              this.$vibroOnOff.classList.add('on');
+            }
+          } else if (data.msg.args[0] === 0) {
+            if (this.$vibroOnOff.classList.contains('on')) {
+              this.$vibroOnOff.classList.remove('on');
+            }
+          }
 
+          this.onVibroNow(data.msg.args);
+        } else if (data.target === 'vibroPulse') {
+          this.$vibroPulseOnDuration.value = data.msg.args[0];
+          this.$vibroPulseOffDuration.value = data.msg.args[1];
+          this.$vibroPulseNbRepetitions.value = data.msg.args[2];
+
+          this.$vibroPulseTrigBtn.classList.add('on');
+          setTimeout(() => {
+            this.$vibroPulseTrigBtn.classList.remove('on');
+          }, 100);
+
+          this.onVibroPulse(data.msg.args);
         }
       }
     });
@@ -254,6 +315,26 @@ class Computer extends EventEmitter {
     };
 
     this.initialized = true;
+  }
+
+  onVibroNow(args) {
+    ipc.send('oscserver', 'sendOSC', {
+      target: 'movuino',
+      msg: {
+        address: '/vibroNow',
+        args: args,
+      },
+    });
+  }
+
+  onVibroPulse(args) {
+    ipc.send('oscserver', 'sendOSC', {
+      target: 'movuino',
+      msg: {
+        address: '/vibroPulse',
+        args: args,
+      },
+    });
   }
 
   //========================== menu / slider changes callbacks
@@ -343,7 +424,7 @@ class Computer extends EventEmitter {
             target: 'local',
             msg: {
               address: '/repetitions',
-              args: [ 'accelerometer', 'gyroscope', 'magnetometer' ][i],
+              args: [[ 'accelerometer', 'gyroscope', 'magnetometer' ][i]],
             },
           });
 

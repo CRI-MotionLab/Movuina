@@ -162,9 +162,13 @@ class Repetitions extends BaseLfo {
       this.lastSentEnergyValue = this.energy;
     }
 
+    this.frame.time = frame.time;
+
     this.frame.data[0] = this.energy;
     this.frame.data[1] = this.mean;
     this.frame.data[2] = trig;
+
+    this.frame.metadata = frame.metadata;
   }
 };
 

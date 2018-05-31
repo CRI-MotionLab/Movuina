@@ -4,7 +4,7 @@ const defaultResamplerParameters = {
   resamplingFrequency: {
     type: 'integer',
     default: 30,
-    metas: 'static', // will trigger reinit stream params
+    metas: { kind: 'static' }, // will trigger reinit stream params
   },
 };
 
@@ -26,11 +26,14 @@ class Resampler extends BaseLfo {
     }
   }
 
-  onParamUpdate(name, value, metas) {
-    if (name === 'resamplingFrequency') {
-      this.processStreamParams();
-    }
-  }
+  // NO USE FOR THIS, AS WE SAID "metas: { kind: 'static' }" in the parameters
+  // processStreamParams is called back automatically
+
+  // onParamUpdate(name, value, metas) {
+  //   if (name === 'resamplingFrequency') {
+  //     this.processStreamParams(this.prevStreamParams);
+  //   }
+  // }
 
   processStreamParams(prevStreamParams = {}) {
     this.prepareStreamParams(prevStreamParams);
@@ -46,10 +49,16 @@ class Resampler extends BaseLfo {
     this.propagateStreamParams();
   }
 
+  processFrame(frame) {
+    this.prepareFrame();
+    this.processFunction(frame);
+  }
+
   processVector(frame) {
     // this.prepareFrame();
+
     this.frame.metadata = frame.metadata;
-    for (let i = 0; i < this.frame.data.length; i++) {
+    for (let i = 0; i < frame.data.length; i++) {
       this.frame.data[i] = frame.data[i];
     }
   }

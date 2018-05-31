@@ -1,6 +1,6 @@
 import { ipcRenderer as ipc } from 'electron';
 
-class Connection {
+class Connections {
   constructor() {
     this.visible = false;
 
@@ -82,7 +82,8 @@ class Connection {
     } else {
       for (let i = 0; i < msg.args.length; i++) {
         if (i > 0) oscStr += ' ';
-        if (typeof msg.args[i] === 'number') {
+        if (typeof msg.args[i] === 'number' &&
+            !Number.isInteger(msg.args[i])) {
           oscStr += `${msg.args[i].toFixed(2)}`;
         } else {
           oscStr += `${msg.args[i]}`;
@@ -107,4 +108,4 @@ class Connection {
   }
 };
 
-export default Connection;
+export default Connections;
