@@ -1,72 +1,12 @@
 import { ipcRenderer as ipc } from 'electron';
 import WaveformRenderer from '../../../shared/core/WaveformRenderer';
-import { BaseLfo } from 'waves-lfo/core';
+import RepetitionsRenderer from '../../../shared/core/RepetitionsRenderer';
 import * as lfo from 'waves-lfo/client';
 import * as lfoMotion from 'lfo-motion';
 import EventEmitter from 'events';
-
-const defaultResamplerParameters = {
-  resamplingFrequency: {
-    type: 'integer',
-    default: 30,
-    metas: 'static', // will trigger reinit stream params
-  },
-};
-
-class Resampler extends BaseLfo {
-  constructor(options = {}) {
-    super(defaultResamplerParameters, options);
-    this.interval = null;
-    this.processFrame = this.processFrame.bind(this);
-  }
-
-  start() {
-    this.interval = setInterval(this._resampleCallback.bind(this), parseInt(1000 / this.params.get('resamplingFrequency')));
-  }
-
-  stop() {
-    if (this.interval !== null) {
-      clearInterval(this.interval);
-      this.interval = null;
-    }
-  }
-
-  onParamUpdate(name, value, metas) {
-    if (name === 'resamplingFrequency') {
-      this.processStreamParams();
-    }
-  }
-
-  processStreamParams(prevStreamParams = {}) {
-    console.log('processing stream params');
-    Object.assign(this.streamParams, prevStreamParams);
-    // console.log(prevStreamParams);
-    // console.log(this.streamParams);
-    this.streamParams.frameRate = parseInt(this.params.get('resamplingFrequency'));
-    if (this.interval !== null) {
-      this.stop();
-      this.start();
-    }
-
-    this.propagateStreamParams();
-  }
-
-  processFrame(frame) {
-    // this.prepareFrame();
-    this.frame.metadata = frame.metadata;
-    for (let i = 0; i < this.frame.data.length; i++) {
-      this.frame.data[i] = frame.data[i];
-    }
-    // this.frame.data = frame.data.slice(0);
-  }
-
-  _resampleCallback() {
-    this.frame.time = Date.now();
-    this.propagateFrame();
-  }
-}
-
-//============================================================================//
+import Resampler from '../../../shared/lfos/Resampler';
+import Repetitions from '../../../shared/lfos/Repetitions';
+import GestureRecognition from '../../../shared/lfos/GestureRecognition';
 
 class Computer extends EventEmitter {
   constructor() {
@@ -74,6 +14,7 @@ class Computer extends EventEmitter {
     const lightYellow = '#fff17a';
     const lightBlue = '#7cdde2';
     const lightRed = '#f45a54';
+    this.lightGrey = '#555';
     this.fillStyles = [ lightYellow, lightBlue, lightRed ];
     this.initialized = false;
 
@@ -82,19 +23,21 @@ class Computer extends EventEmitter {
     this.filterSize = 1; // pts
 
     this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-    this.displaySensorsBridge = this.displaySensorsBridge.bind(this);
-    this.sensorRepetitionsBridge = this.sensorRepetitionsBridge.bind(this);
+    this.displayBridgeCallback = this.displayBridgeCallback.bind(this);
+    this.rawBridgeCallback = this.rawBridgeCallback.bind(this);
+    this.repetitionsBridgeCallback = this.repetitionsBridgeCallback.bind(this);
+    this.gestureRecognitionBridgeCallback = this.gestureRecognitionBridgeCallback.bind(this);
 
     this.movuinoConnected = false;
+
+    //====================== LFO OPERATORS INSTANCIATION =====================//
 
     this.eventIn = new lfo.source.EventIn({
       frameSize: 9,
       frameType: 'vector',
       frameRate: 1,
     });
-    // this.resampler = new lfoMotion.operator.Sampler({
-    //   resamplingFrequency: this.resamplingFrequency,
-    // });
+
     this.resampler = new Resampler({
       resamplingFrequency: this.resamplingFrequency,
     });
@@ -102,26 +45,78 @@ class Computer extends EventEmitter {
       order: this.filterSize,
       fill: 0,
     });
-    this.repetitionsBridge = new lfo.sink.Bridge({
-      processFrame: (frame) => { this.sensorRepetitionsBridge(frame); },
-    });
-    this.reresampler = new Resampler({
+
+    this.displayResampler = new Resampler({
       resamplingFrequency: 25,
     });
     this.displayBridge = new lfo.sink.Bridge({
-      processFrame: (frame) => { this.displaySensorsBridge(frame); },
+      processFrame: (frame) => { this.displayBridgeCallback(frame); },
     });
+
+    this.rawBridge = new lfo.sink.Bridge({
+      processFrame: (frame) => { this.rawBridgeCallback(frame); },
+    });
+
+    this.filteredAccSelector = new lfo.operator.Select({ indexes: [ 0, 1, 2 ] });
+    // this.accMagnitude = new lfo.operator.Magnitude();
+    // this.accMultiplier = new lfo.operator.Multiplier({ factor: 100 });
+    this.accRepetitions = new Repetitions();
+
+    this.filteredGyrSelector = new lfo.operator.Select({ indexes: [ 3, 4, 5 ] });
+    // this.gyrMagnitude = new lfo.operator.Magnitude();
+    // this.gyrMultiplier = new lfo.operator.Multiplier({ factor: 100 });
+    this.gyrRepetitions = new Repetitions();
+
+    this.filteredMagSelector = new lfo.operator.Select({ indexes: [ 6, 7, 8 ] });
+    // this.magMagnitude = new lfo.operator.Magnitude();
+    // this.magMultiplier = new lfo.operator.Multiplier({ factor: 100 });
+    this.magRepetitions = new Repetitions();
+
+
+    this.repetitionsMerger = new lfo.operator.Merger({ frameSizes: [ 3, 3, 3 ] });
+
+    this.repetitionsBridge = new lfo.sink.Bridge({
+      processFrame: (frame) => { this.repetitionsBridgeCallback(frame); },
+    });
+
+    this.gestureRecognition = new GestureRecognition();
+    this.gestureRecognitionBridge = new lfo.sink.Bridge({
+      processFrame: (frame) => { this.gestureRecognitionBridgeCallback(frame); },
+    });
+
+    //========================= LFO GRAPH CREATION ===========================//
 
     this.eventIn.connect(this.resampler);
     this.resampler.connect(this.mvAvrg);
-    // this.resampler.connect(this.reresampler);
-    // this.reresampler.connect(this.mvAvrg);
-    // this.mvAvrg.connect(this.filterBridge);
 
-    this.mvAvrg.connect(this.repetitionsBridge);
+    this.mvAvrg.connect(this.displayResampler);
+    this.displayResampler.connect(this.displayBridge);
 
-    this.mvAvrg.connect(this.reresampler);
-    this.reresampler.connect(this.displayBridge);
+    this.mvAvrg.connect(this.rawBridge);
+
+    // this.mvAvrg.connect(this.repetitions);
+    // this.repetitions.connect(this.repetitionsBridge);
+
+    // repetitions
+
+    this.mvAvrg.connect(this.filteredAccSelector);
+    this.mvAvrg.connect(this.filteredGyrSelector);
+    this.mvAvrg.connect(this.filteredMagSelector);
+
+    this.filteredAccSelector.connect(this.accRepetitions);
+    this.filteredGyrSelector.connect(this.gyrRepetitions);
+    this.filteredMagSelector.connect(this.magRepetitions);
+
+    this.accRepetitions.connect(this.repetitionsMerger);
+    this.gyrRepetitions.connect(this.repetitionsMerger);
+    this.magRepetitions.connect(this.repetitionsMerger);
+
+    this.repetitionsMerger.connect(this.repetitionsBridge);
+
+    // gesture recognition
+
+    this.mvAvrg.connect(this.gestureRecognition);
+    this.gestureRecognition.connect(this.gestureRecognitionBridge);
   }
 
   init() {
@@ -157,66 +152,100 @@ class Computer extends EventEmitter {
       this.waveformRenderers[i].start();
     }
 
-    this.$zoom = document.querySelector('#zoom-slider');
-    this.$zoom.addEventListener('change', () => {
-      for (let i = 0; i < 3; i++) {
-        this.waveformRenderers[i].zoom = this.$zoom.value * 0.01;
+    // data analysis / repetitions section
+
+    this.$repetitionsCanvasTrigs = [
+      document.querySelector('#movuino-accelerometer-repetitions-canvas'),
+      document.querySelector('#movuino-gyroscope-repetitions-canvas'),
+      document.querySelector('#movuino-magnetometer-repetitions-canvas'),
+    ];
+
+    this.$repetitionsBtnTrigs = [
+      document.querySelector('#movuino-accelerometer-repetitions-btn'),
+      document.querySelector('#movuino-gyroscope-repetitions-btn'),
+      document.querySelector('#movuino-magnetometer-repetitions-btn'),
+    ];
+
+    this.repetitionsRenderers = [];
+
+    for (let i = 0; i < 3; i++) {
+      const rep = this.$repetitionsCanvasTrigs[i];
+      this.repetitionsRenderers.push(new RepetitionsRenderer(rep, [ this.fillStyles[i], this.lightGrey ]));
+      this.repetitionsRenderers[i].start();
+    }
+
+    ipc.on('oscserver', (e, ...args) => {
+      const cmd = args[0];
+      const data = args[1];
+
+      if (cmd === 'control') {
+        if (data.target === 'sensors') {
+          this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+
+          for (let i = 0; i < Math.min(data.msg.args.length, 9); i++) {
+            this.sensorsData[i] = data.msg.args[i];
+          }
+
+          this.eventIn.process(0, this.sensorsData);
+        } else if (data.target === 'vibroPulse') {
+
+        } else if (data.target === 'vibroNow') {
+
+        }
       }
     });
+
+    ipc.on('menu', (e, ...args) => {
+      if (args[0] === 'showOSCConnections') {
+        for (let i = 0; i < 3; i++) {
+          this.waveformRenderers[i].setUpdateDimensionsOnRender(true);
+        }
+
+        setTimeout((() => {
+          for (let i = 0; i < 3; i++) {
+            this.waveformRenderers[i].setUpdateDimensionsOnRender(false);
+          }
+        }).bind(this), 500);
+      }
+    });
+
+    this.$zoom = document.querySelector('#zoom-slider');
+    this.$zoom.addEventListener('change', () => {
+      this.onZoomSliderValueChanged();
+    });
     this.$zoom.value = 0;
+    this.onZoomSliderValueChanged();
 
     this.$lineWidth = document.querySelector('#line-width-slider');
     this.$lineWidth.addEventListener('change', () => {
-      for (let i = 0; i < 3; i++) {
-        this.waveformRenderers[i].lineWidth = this.$lineWidth.value * 0.01 + 1;
-      }
+      this.onLineWidthSliderValueChanged();
     });
-    this.$lineWidth.value = 0;
+    this.$lineWidth.value = 50;
+    this.onLineWidthSliderValueChanged();
 
     this.$lineStyle = document.querySelector('#line-style-menu');
     this.$lineStyle.addEventListener('change', () => {
-      for (let i = 0; i < 3; i++) {
-        this.waveformRenderers[i].lineStyle = this.$lineStyle.value;
-      }
+      this.onLineStyleMenuValueChanged();
     });
 
     this.$pointStyle = document.querySelector('#point-style-menu');
     this.$pointStyle.addEventListener('change', () => {
-      for (let i = 0; i < 3; i++) {
-        this.waveformRenderers[i].pointStyle = this.$pointStyle.value;
-      }
-    });
-
-    ipc.on('oscmessage', (e, ...args) => {
-      if (args[0] === 'input' && args[1].address.split('/').pop() === 'sensors') {
-        this.sensorsData = [];
-
-        for (let i = 0; i < 9; i++) {
-          this.sensorsData.push(args[1].args[i].value);
-        }
-
-        this.eventIn.process(0, this.sensorsData);
-      }
+      this.onPointStyleMenuValueChanged();
     });
 
     this.$resamplingFrequency = document.querySelector('#resampling-frequency-slider');
     this.$resamplingFrequency.addEventListener('change', () => {
-      this.resamplingFrequency = parseInt(this.$resamplingFrequency.value * 0.95 + 5);
-      this.resampler.params.set('resamplingFrequency', this.resamplingFrequency);
-      // this.updateResamplingFrequency();
+      this.onResamplingFrequencySliderValueChanged();
     });
-    this.$resamplingFrequency.value = 100;
+    this.$resamplingFrequency.value = 50;
+    this.onResamplingFrequencySliderValueChanged();
 
     this.$filterSize = document.querySelector('#filter-size-slider');
     this.$filterSize.addEventListener('change', () => {
-      this.filterSize = parseInt(this.$filterSize.value * 0.49 + 1);
-      this.mvAvrg.params.set('order', this.filterSize);
+      this.onFilterSizeSliderValueChanged();
     });
     this.$filterSize.value = 0;
-
-    // this.eventIn.start();
-    // this.resampler.start();
-    // this.reresampler.start();
+    this.onFilterSizeSliderValueChanged();
 
     window.onresize = () => {
       for (let i = 0; i < 3; i++) {
@@ -227,7 +256,45 @@ class Computer extends EventEmitter {
     this.initialized = true;
   }
 
-  displaySensorsBridge(frame) {
+  //========================== menu / slider changes callbacks
+
+  onZoomSliderValueChanged() {
+    for (let i = 0; i < 3; i++) {
+      this.waveformRenderers[i].zoom = this.$zoom.value * 0.01;
+    }
+  }
+
+  onLineWidthSliderValueChanged(slider) {
+    for (let i = 0; i < 3; i++) {
+      this.waveformRenderers[i].lineWidth = this.$lineWidth.value * 0.01 + 1;
+    }
+  }
+
+  onLineStyleMenuValueChanged(slider) {
+    for (let i = 0; i < 3; i++) {
+      this.waveformRenderers[i].lineStyle = this.$lineStyle.value;
+    }
+  }
+
+  onPointStyleMenuValueChanged(slider) {
+    for (let i = 0; i < 3; i++) {
+      this.waveformRenderers[i].pointStyle = this.$pointStyle.value;
+    }
+  }
+
+  onResamplingFrequencySliderValueChanged(slider) {
+    this.resamplingFrequency = parseInt(this.$resamplingFrequency.value * 0.95 + 5);
+    this.resampler.params.set('resamplingFrequency', this.resamplingFrequency);
+  }
+
+  onFilterSizeSliderValueChanged(slider) {
+    this.filterSize = parseInt(this.$filterSize.value * 0.49 + 1);
+    this.mvAvrg.params.set('order', this.filterSize);
+  }
+
+  //=========================== waves-lfo bridges
+
+  displayBridgeCallback(frame) {
     // console.log(frame);
     const sensors = frame.data;
 
@@ -244,28 +311,78 @@ class Computer extends EventEmitter {
     this.setWaveformData([ acc, gyr, mag ]);
   }
 
-  sensorRepetitionsBridge(frame) {
-    // send frame via OSC through from here
+  rawBridgeCallback(frame) {
+    // console.log(frame);
+    const arrayFrame = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
 
-    // also add Adrien's code here : DynamicRange and StepDetection
-    // if one of the 3 sensors trigs, add the "on" class to the corresponding round div
-    // then remove the "on" class with a short setTimeout
-    // and send the appropriate OSC messages
+    for (let i = 0; i < frame.data.length; i++) {
+      arrayFrame[i] = frame.data[i];
+    }
 
-    // then also drive an xmm system and also send some OSC messages
+    ipc.send('oscserver', 'sendOSC', {
+      target: 'local',
+      msg: {
+        address: '/filteredSensors',
+        args: arrayFrame,
+      },
+    });
+  }
+
+  repetitionsBridgeCallback(frame) {
+    if (frame.data.length === 9) {
+      for (let i = 0; i < 3; i++) {
+        const energy = frame.data[i * 3];
+        const dynamicTrigThreshold = frame.data[i * 3 + 1];
+
+        this.repetitionsRenderers[i].setData(energy, dynamicTrigThreshold);
+
+        if (frame.data[i * 3 + 2] === 1) {
+          const btn = this.$repetitionsBtnTrigs[i];
+
+          ipc.send('oscserver', 'sendOSC', {
+            target: 'local',
+            msg: {
+              address: '/repetitions',
+              args: [ 'accelerometer', 'gyroscope', 'magnetometer' ][i],
+            },
+          });
+
+          if (!btn.classList.contains('on')) {
+            btn.classList.add('on');
+            setTimeout(() => {
+              if (btn.classList.contains('on')) {
+                btn.classList.remove('on');
+              }
+            }, 100);
+          }
+        }
+      }
+    }
+  }
+
+  gestureRecognitionBridgeCallback(frame) {
+    // TODO
+
+    // ipc.send('oscserver', 'sendOSC', {
+    //   target: 'local',
+    //   msg: {
+    //     address: '/gestureRecognition',
+    //     args: arrayFrame,
+    //   },
+    // });
   }
 
   setMovuinoConnected(connected) {
     this.movuinoConnected = connected;
 
     if (!connected) {
-      this.reresampler.stop();
+      this.displayResampler.stop();
       this.resampler.stop();
       this.eventIn.stop();
     } else {
       this.eventIn.start();
       this.resampler.start();
-      this.reresampler.start();
+      this.displayResampler.start();
     }
   }
 

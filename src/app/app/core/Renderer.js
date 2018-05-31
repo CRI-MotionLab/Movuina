@@ -1,7 +1,6 @@
 import EventEmitter from 'events';
 import path from 'path';
 import url from 'url';
-import os from 'os';
 
 import ejs from 'ejs';
 import fs from 'fs-extra';
@@ -13,26 +12,7 @@ import {
   ipcMain as ipc
 } from 'electron';
 
-// found here :
-// https://stackoverflow.com/questions/3653065/get-local-ip-address-in-node-js
-
-const getMyIP = () => {
-  let res = null;
-  var ifaces = os.networkInterfaces();
-
-  Object.keys(ifaces).forEach(function(ifname) {
-    ifaces[ifname].forEach(function(iface) {
-      if (iface.family !== 'IPv4' || iface.internal !== false) {
-        return;
-      }
-
-      res = iface.address;
-      console.log(ifname + ' : ' + iface.address); // this is my IP
-    });
-  });
-
-  return res;
-};
+import { getMyIP } from './util';
 
 //============================================================================//
 
@@ -91,11 +71,8 @@ class Renderer extends EventEmitter {
         } else if (arg === 'getmyip') {
           const ip = getMyIP();
           if (ip !== null) {
-            // console.log(ip);
             this.send('renderer', 'getmyip', ip);
           }
-        // } else if (arg === 'getmovuinoip') {
-        //   this.emit('movuino', 'address?');
         }
       });
 
@@ -107,35 +84,27 @@ class Renderer extends EventEmitter {
       });
 
       // find a way to forward all messages this way (or by renderer name channel)
-      // ipc.on('data', (e, ...args) => {
-      //   console.log(e);
-      //   console.log(args);
-      // });
+      // => this seems to work fine
 
-      const channels = [ 'serialport', 'movuino', 'oscserver' ];
-
+      const channels = [
+        'serialport',
+        'movuino',
+        'oscserver',
+      ];
       channels.forEach((channel) => {
-        ipc.on(channel, (e, cmd, arg) => {
-          this.emit(channel, cmd, arg);
+        ipc.on(channel, (e, cmd, args) => {
+          this.emit(channel, cmd, args);
         });
       });
 
-      /*
-      ipc.on('serialport', (e, cmd, arg) => {
-        this.emit('serialport', cmd, arg);
-      });
-
-      ipc.on('movuino', (e, cmd, arg) => {
-        this.emit('movuino', cmd, arg);
-      });
-
-      ipc.on('oscserver', (e, cmd, arg) => {
-        this.emit('oscserver', cmd, arg);
-      });
-      //*/
+      // window stuff
 
       this.window.webContents.on('did-finish-load', () => {
         // eventually do stuff here
+      });
+
+      this.window.on('close', (e) => {
+        e.preventDefault();
       });
 
       this.window.on('closed', () => {

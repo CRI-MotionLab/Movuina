@@ -1,10 +1,11 @@
 import path from 'path'
 import url from 'url';
-import { app } from 'electron';
+import { app, Menu } from 'electron';
 import osc from 'osc';
 import config from '../../config'; // this is just a copy of build/config/<used_config_name>.js
 
 import {
+  AppMenu,
   Serial,
   Renderer,
   WebServer,
@@ -38,8 +39,12 @@ renderer.on('oscserver', (cmd, args) => {
   oscServer.executeCommand(cmd, args);
 });
 
-oscServer.on('oscmessage', (cmd, args) => {
-  renderer.send('oscmessage', cmd, args);
+oscServer.on('renderer', (cmd, args) => {
+  renderer.send('oscserver', cmd, args);
+});
+
+AppMenu.on('showOSCConnections', (show) => {
+  renderer.send('menu', 'showOSCConnections', show);
 });
 
 //--------------------------------------- app stuff
@@ -49,6 +54,10 @@ oscServer.on('oscmessage', (cmd, args) => {
 // Some APIs can only be used after this event occurs.
 
 app.on('ready', () => {
+  const menu = Menu.buildFromTemplate(AppMenu.getMenuTemplate());
+  // AppMenu.setMenu(menu);
+  Menu.setApplicationMenu(menu);
+
   renderer.createWindow();
 });
 

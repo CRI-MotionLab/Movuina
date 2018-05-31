@@ -26,6 +26,8 @@ $whiteLeftArrowPath: $mediaPath + 'Icon_Arrow2-03.png';
 
 $fontFamily: LatoLatinoWeb, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
+$transDuration: 500ms;
+
 //======================== MOVUINO INTERFACE STYLE ===========================//
 
 html, body, h1, h2, h3, h4, h5, h6 {
@@ -169,14 +171,37 @@ input::-webkit-inner-spin-button {
     margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
 }
 
+div#main-wrapper {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  margin-bottom: 10px;
+}
+
 div#main {
   padding: 10px;
-  position: relative;
+  position: absolute;
   height: 100%;
   min-height: 100%;
   background-color: #fff;
   text-align: center;
-  max-width: 80%;
+
+  left: 0;
+  right: 0px; // set to 0 by default
+
+  transition-delay: 0ms;
+  transition-property: right;
+  transition-duration: $transDuration;
+
+  &.show-osc-connections {
+    right: 180px;
+
+    transition-delay: 0ms;
+    transition-property: right;
+    transition-duration: $transDuration;
+  }
 }
 
 div#movuino, div#computer {
@@ -359,7 +384,69 @@ input.small-number {
   width: 40px;
 }
 
-/* OSC CONNECTIONS */
+//* * * * * * * * * * * * * * * OSC CONNECTIONS * * * * * * * * * * * * * * * */
+
+div.osc-arrow {
+  position: absolute;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100px;
+  height: 100px;
+
+  opacity: 0.0;
+  transition-property: opacity;
+  transition-duration: $transDuration;
+
+  &.show-osc-connections {
+    opacity: 1.0;
+    transition-property: opacity;
+    transition-duration: $transDuration;
+  }
+}
+
+div.osc-messages {
+  position: relative;
+  display: inline-block;
+  width: 49%;
+  // height: auto;
+  height: 5em;
+  padding: 50px 0px 50px 0px !important;
+  vertical-align: middle !important;
+  text-align: center;
+  // font-size: 0.8em;
+
+  color: rgba(0, 0, 0, 0.0);
+  transition-property: color;
+  transition-duration: $transDuration;
+
+  &.show-osc-connections {
+    color: rgba(0, 0, 0, 1.0);
+    transition-property: color;
+    transition-duration: $transDuration;
+  }
+}
+
+//-------------------------------- VERTICAL ----------------------------------//
+
+div#movuino-osc-connections {
+  display: block;
+
+  visibility: hidden;
+  max-height: 10px;
+
+  transition-property: max-height, visibility;
+  transition-delay: 0s, $transDuration;
+  transition-duration: $transDuration, 0s;
+
+  &.show-osc-connections {
+    visibility: visible;
+    max-height: 100%;
+
+    transition-property: visibility, max-height;
+    transition-delay: 0s, 0s;
+    transition-duration: 0s, $transDuration;
+  }
+}
 
 div#movuino-osc-flow-representations-container,
 div#movuino-osc-flow-representations-container-pre,
@@ -376,60 +463,12 @@ div#movuino-osc-flow-representations-contents {
   /*height: 120px;*/
 }
 
-div.right-arrow-overlay {
-  position: relative;
-  width: 100%;
-  display: block;
-  padding: 0 !important;
+div#movuino-osc-flow-input-messages {
+  left: 0;
 }
 
-div.local-osc-connection {
-  position: absolute;
-  top: 50%;
-  display: block;
-  padding: 0 !important;
-
-  &.left { right: -69px; }
-  &.right { right: -91px; }
-}
-
-div.local-osc-flow-representations-container-pre {
-  position: relative;
-  padding: 0 !important;
-}
-
-div.local-osc-flow-representations-container {
-  position: relative;
-  // top: 50%;
-  top: -10px;
-  left: -20px;
-  padding: 0 !important;
-  padding-left: 5px !important;
-}
-
-div.local-osc-flow-representations-contents {
-  position: absolute;
-  padding: 0 !important;
-
-  div { padding: 0; }
-}
-
-// todo: delete if not needed
-
-div.local-osc-flow-input-messages {
-
-}
-
-div.local-osc-flow-output-messages {
-
-}
-
-div.osc-arrow {
-  position: absolute;
-  margin: 0 !important;
-  padding: 0 !important;
-  width: 100px;
-  height: 100px;
+div#movuino-osc-flow-output-messages {
+  right: 0;
 }
 
 div#osc-from-movuino-vertical {
@@ -464,7 +503,64 @@ div#osc-from-app-vertical {
   background-size: 100px 100px;
 }
 
-//----------------------------------------------------------------------------//
+//------------------------------- HORIZONTAL ---------------------------------//
+
+div.right-arrow-overlay {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0 !important;
+}
+
+div.local-osc-connection {
+  position: absolute;
+  display: block;
+  top: 50%;
+  padding: 0 !important;
+
+  &.left { right: -69px; }
+  &.right { right: -91px; }
+
+  // visibility: hidden;
+  // transition-property: visibility;
+  // transition-delay: $transDuration;
+
+  // &.show-osc-connections {
+  //   visibility: visible;
+  //   transition-property: visibility;
+  //   transition-delay: 0ms;
+  // }
+}
+
+div.local-osc-flow-representations-container-pre {
+  position: relative;
+  padding: 0 !important;
+}
+
+div.local-osc-flow-representations-container {
+  position: relative;
+  // not very clean but OK for now (should depend on the actual font size)
+  top: -10px;
+  left: -20px;
+
+  padding: 0 !important;
+  padding-left: 5px !important;
+}
+
+div.local-osc-flow-representations-contents {
+  position: absolute;
+  padding: 0 !important;
+
+  div { padding: 0; }
+}
+
+div.local-osc-flow-input-messages {
+
+}
+
+div.local-osc-flow-output-messages {
+
+}
 
 div.osc-to-app-horizontal {
   top: 0;
@@ -484,26 +580,7 @@ div.osc-from-app-horizontal {
   background-size: 100px 100px;
 }
 
-div.osc-messages {
-  position: relative;
-  display: inline-block;
-  width: 49%;
-  height: auto;
-  padding: 50px 0px 50px 0px !important;
-  vertical-align: middle !important;
-  text-align: center;
-  // font-size: 0.8em;
-}
-
-div#movuino-osc-flow-input-messages {
-  left: 0;
-}
-
-div#movuino-osc-flow-output-messages {
-  right: 0;
-}
-
-/* DATA */
+/* * * * * * * * * * * * * * * * * * DATA * * * * * * * * * * * * * * * * * * */
 
 div#computer-title-container {
   position: relative;

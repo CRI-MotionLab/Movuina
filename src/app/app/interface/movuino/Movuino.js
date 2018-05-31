@@ -154,10 +154,15 @@ class Movuino extends EventEmitter {
         this.movuinoIP = arg;
         this.updateMovuinoSettings(true);
       } else if (args[0] === 'heartbeat') {
-        if (args[1][0] === '1' && !this.$wiFiOnOff.checked) {
-          this.$wiFiOnOff.checked = true;
-        } else if (args[1][0] === '0' && this.$wiFiOnOff.checked) {
-          this.$wiFiOnOff.checked = false;
+        if ((args[1][0] === '1' && !this.$wiFiOnOff.checked) ||
+            (args[1][0] === '0' && this.$wiFiOnOff.checked)) {
+          this.$wiFiOnOff.checked = !this.$wiFiOnOff.checked;
+
+          const movuinoIP = args[1][1].split('.');
+          this.$movip1.value = parseInt(movuinoIP[0]);
+          this.$movip2.value = parseInt(movuinoIP[1]);
+          this.$movip3.value = parseInt(movuinoIP[2]);
+          this.$movip4.value = parseInt(movuinoIP[3]);
         }
       }
     });
@@ -232,7 +237,7 @@ class Movuino extends EventEmitter {
     });
 
     if (!connected) {
-      ipc.send('oscserver', 'stop');
+      ipc.send('oscserver', 'stopMovuinoServer');
     }
 
     this.emit('connected', connected);
@@ -253,7 +258,7 @@ class Movuino extends EventEmitter {
         this.movuinoSettings.hostIP !== hostIP ||
         this.movuinoSettings.portIn !== portIn ||
         this.movuinoSettings.portOut !== portOut) {
-      ipc.send('oscserver', 'restart', {
+      ipc.send('oscserver', 'restartMovuinoServer', {
         localAddress: hostIP,
         localPort: portOut,
         remoteAddress: this.movuinoIP,
@@ -262,7 +267,7 @@ class Movuino extends EventEmitter {
     }
 
     if (this.movuinoSettings.oscId !== oscId) {
-      ipc.send('oscserver', 'movuinoid', oscId);
+      ipc.send('oscserver', 'oscid', oscId);
     }
 
     this.movuinoSettings = {

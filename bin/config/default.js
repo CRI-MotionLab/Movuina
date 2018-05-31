@@ -76,12 +76,18 @@ const config = {
 
     //--------------------------------- servers ------------------------------//
 
-    oscServer: {
+    movuinoOSCServer: {
       localAddress: '127.0.0.1',
-      // localAddress: '192.168.0.12',
       localPort: 9001,
       remoteAddress: '192.168.0.101', // whatever, will be updated
       remotePort: 9000,
+    },
+
+    localOSCServer: {
+      localAddress: '127.0.0.1',
+      localPort: 3001,
+      remoteAddress: '127.0.0.1',
+      remotePort: 3000,
     },
 
     webServer: {

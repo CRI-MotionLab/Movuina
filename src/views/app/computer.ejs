@@ -50,7 +50,7 @@
         </div>
       </div>
 
-      <%- include('./local-osc-connection', { direction: 'left', id: 'local-osc-input-messages-1'}) %>
+      <%- include('./local-osc-connection', { direction: 'left', id: 'local-osc-flow-input-messages-1'}) %>
 
     </div> <!-- right-arrow-overlay -->
   </div>
@@ -161,7 +161,7 @@
         </div> <!-- data sensors -->
       </div> <!-- section flex -->
 
-      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-1'}) %>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-flow-output-messages-1'}) %>
 
     </div> <!-- right-arrow-overlay -->
   </div> <!-- data visualization -->
@@ -178,7 +178,7 @@
           <div id="movuino-accelerometer-repetitions" class="inline third">
             <div class="thin">
               <canvas id="movuino-accelerometer-repetitions-canvas"></canvas>
-              <div class="sensor-repetitions reset yellow"></div>
+              <div id="movuino-accelerometer-repetitions-btn" class="sensor-repetitions reset yellow"></div>
             </div>
             <div class="subtle">Accelerometer</div>
           </div>
@@ -186,7 +186,7 @@
           <div id="movuino-gyroscope-repetitions" class="inline third">
             <div class="thin">
               <canvas id="movuino-gyroscope-repetitions-canvas"></canvas>
-              <div class="sensor-repetitions reset blue"></div>
+              <div id="movuino-gyroscope-repetitions-btn" class="sensor-repetitions reset blue"></div>
             </div>
             <div class="subtle">Gyroscope</div>
           </div>
@@ -194,7 +194,7 @@
           <div id="movuino-magnetometer-repetitions" class="inline third">
             <div class="thin">
               <canvas id="movuino-magnetometer-repetitions-canvas"></canvas>
-              <div class="sensor-repetitions reset red"></div>
+              <div id="movuino-magnetometer-repetitions-btn" class="sensor-repetitions reset red"></div>
             </div>
             <div class="subtle">Magnetometer</div>
           </div>
@@ -205,7 +205,7 @@
         </div>
       </div> <!-- repetitions -->
 
-      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-2'}) %>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-flow-output-messages-2'}) %>
 
     </div> <!-- right-arrow-overlay -->
   </div>
@@ -220,7 +220,7 @@
         </div>
       </div> <!-- xmm -->
 
-      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-output-messages-3'}) %>
+      <%- include('./local-osc-connection', { direction: 'right', id: 'local-osc-flow-output-messages-3'}) %>
 
     </div> <!-- right-arrow-overlay -->
   </div>

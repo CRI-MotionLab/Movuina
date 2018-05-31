@@ -1,43 +1,18 @@
 import EventEmitter from 'events';
 import osc from 'osc';
+import { getMyIP } from './util';
 
-class OSCServer extends EventEmitter {
+//=========================== BASIC UDP OSC SERVER ===========================//
+
+class BaseOSCServer extends EventEmitter {
   constructor(config) {
     super();
+    this.config = config;
     this.server = null;
-    this.config = config.dist.oscServer;
-    this.triggers = new Map();
-    // this.restartServer();
+    this.ready = false;
   }
 
-  executeCommand(cmd, args) {
-    if (cmd === 'stop') {
-      this.stopServer();
-    } else if (cmd === 'restart') {
-      // console.log(args);
-      console.log(`restarting server with ports ${args.localPort} and ${args.remotePort}, hostIP ${args.localAddress}, remoteIP ${args.remoteAddress}`);
-      Object.assign(this.config, args);
-      this.restartServer();
-    } else if (cmd === 'movuinoid') {
-      console.log(`updating movuino osc identifier to "${args}"`);
-      this.clearTriggers();
-      this.receive(`/${args}/sensors`, (sensors) => {
-        // console.log('Wouhou ! I\'m receiving sensor values : ' + sensors);
-        const typedArgs = [];
-        for (let i = 0; i < sensors.length; i++) {
-          typedArgs.push({ type: 'f', value: sensors[i] });
-        }
-
-        this.emit('oscmessage', 'input', {
-          address: `/${args}/sensors`,
-          port: this.config.localPort,
-          args: typedArgs,
-        });
-      });
-    }
-  }
-
-  stopServer() {
+  stop() {
     if (this.server !== null && this.ready) {
       this.server.close((err) => {
         console.error(err.stack);
@@ -45,7 +20,10 @@ class OSCServer extends EventEmitter {
     }
   }
 
-  restartServer() {
+  restart(args) {
+    Object.assign(this.config, args);
+    // console.log(JSON.stringify(this.config, null, 2));
+
     if (this.server !== null && this.ready) {
       this.server.close((err) => {
         console.error(err.stack);
@@ -66,51 +44,145 @@ class OSCServer extends EventEmitter {
     });
 
     this.server.on('message', (msg) => {
-      const triggers = this.triggers.get(msg.address);
-
-      if (Array.isArray(triggers)) {
-        triggers.forEach((callback) => {
-          callback(msg.args);
-        });
-      }
+      this.emit('oscmessage', Object.assign(msg, { port: this.config.localPort }));
     });
 
     this.server.on('close', () => {
       this.ready = false;
-      //console.log('osc server closed');
     });
   }
 
   send(address, args) {
     if (this.ready) {
-      const packet = {
+      const msg = {
         address: address,
         args: []
       };
 
       for (let i = 0; i < args.length; i++) {
         if (typeof args[i] === 'number') {
-          packet.args.push({ type: 'f', value: args[i] });
+          msg.args.push({ type: 'f', value: args[i] });
         } else if (typeof args[i] === 'string') {
-          packet.args.push({ type: 's', value: args[i] });
+          msg.args.push({ type: 's', value: args[i] });
         } else {
-          packet.args.push({ type: 's', value: `${args[i]}` });
+          msg.args.push({ type: 's', value: `${args[i]}` });
         }
       }
 
-      this.server.send(packet);
+      this.server.send(msg);
+      this.emit('oscmessage', {
+        address: address,
+        args: args,
+        port: this.config.remotePort,
+      });
+    }
+  }
+};
+
+//========================== META OSC SERVER / HUB ===========================//
+
+class OSCServer extends EventEmitter {
+  constructor(config) {
+    super();
+    this.movuinoServer = new BaseOSCServer(config.dist.movuinoOSCServer);
+    this.localServer = new BaseOSCServer(config.dist.localOSCServer);
+
+    this.routeOSCMessage = this.routeOSCMessage.bind(this);
+    this.movuinoServer.on('oscmessage', (msg) => this.routeOSCMessage('movuino', msg));
+    this.localServer.on('oscmessage', (msg) => this.routeOSCMessage('local', msg));
+
+    this.triggers = new Map();
+    this.oscId = null;
+
+    // received by udp servers
+
+    this.receive('movuino', '/sensors', (msg) => {
+      this.emit('renderer', 'display', { target: 'movIn', msg: msg });
+      this.emit('renderer', 'control', { target: 'sensors', msg: msg });
+    });
+
+    this.receive('local', '/vibroPulse', (msg) => {
+      this.emit('renderer', 'display', { target: 'localIn', msg: msg });
+      this.emit('renderer', 'control', { target: 'vibroPulse', msg: msg });
+    });
+
+    this.receive('local', '/vibroNow', (msg) => {
+      this.emit('renderer', 'display', { target: 'localIn', msg: msg });
+      this.emit('renderer', 'control', { target: 'vibroNow', msg: msg });
+    });
+
+    // emitted by sends
+
+    this.receive('movuino', '/vibroPulse', (msg) => {
+      this.emit('renderer', 'display', { target: 'movOut', msg: msg });
+    });
+
+    this.receive('movuino', '/vibroPulse', (msg) => {
+      this.emit('renderer', 'display', { target: 'movOut', msg: msg });
+    });
+
+    this.receive('local', '/filteredSensors', (msg) => {
+      this.emit('renderer', 'display', { target: 'localOut1', msg: msg });
+    });
+
+    this.receive('local', '/repetitions', (msg) => {
+      this.emit('renderer', 'display', { target: 'localOut2', msg: msg });
+    });
+
+    this.localServer.restart({ localAddress: getMyIP() });
+  }
+
+  executeCommand(cmd, args) {
+    if (cmd === 'stopMovuinoServer') {
+      this.movuinoServer.stop();
+    } else if (cmd === 'restartMovuinoServer') {
+      this.movuinoServer.restart(args);
+    } else if (cmd === 'oscid') {
+      this.oscId = args;
+    } else if (cmd === 'sendOSC') {
+      this.send(args.target, args.msg);
     }
   }
 
-  clearTriggers() {
-    this.triggers = new Map();
+  routeOSCMessage(server, msg) {
+    // if (server === 'local' && msg.address !== '/mov1/filteredSensors') {
+    //   console.log(msg);
+    // }
+
+    let unprefixed = msg.address.split('/');
+
+    // remove empty string due to first slash
+    // then remove movuino osc id
+    // while checking they're correct at the same time
+    if (unprefixed.shift() === '' && unprefixed.shift() === this.oscId) {
+
+      const triggerAddress = `${server}:/${unprefixed.join('/')}`;
+      const triggers = this.triggers.get(triggerAddress);
+
+      if (Array.isArray(triggers)) {
+        triggers.forEach((callback) => {
+          callback(msg);
+        });
+      }
+    }
   }
 
-  receive(cmd, callback) {
-    if (!this.triggers.get(cmd)) {
-      this.triggers.set(cmd, [ callback ]);
+  send(server, msg) {
+    const realAddress = `/${this.oscId}${msg.address}`;
+    if (server === 'movuino') {
+      this.movuinoServer.send(realAddress, msg.args);
+    } else if (server === 'local') {
+      this.localServer.send(realAddress, msg.args);
+    }
+  }
+
+  receive(server, address, callback) {
+    const triggerAddress = `${server}:${address}`;
+
+    if (!this.triggers.get(triggerAddress)) {
+      this.triggers.set(triggerAddress, [ callback ]);
     } else {
-      this.triggers.get(cmd).push(callback);
+      this.triggers.get(triggerAddress).push(callback);
     }
   }
 };

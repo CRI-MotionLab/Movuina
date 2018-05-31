@@ -33,6 +33,7 @@ class WaveformRenderer extends Canvas2DRenderer {
     }
 
     this.rendered = false;
+    this.updateDimensionsOnRender = false;
   }
 
   setData(data) {
@@ -62,7 +63,15 @@ class WaveformRenderer extends Canvas2DRenderer {
     this.resolution = parseInt((1 - this.zoomValue) * (this.maxRes - this.minRes) + this.minRes);
   }
 
+  setUpdateDimensionsOnRender(update) {
+    this.updateDimensionsOnRender = update;
+  }
+
   _render() {
+    if (this.updateDimensionsOnRender) {
+      this.updateDimensions();
+    }
+
     const ctx = this.$ctx;
     const c = this.$canvas;
     const bpf = this.buffer;
