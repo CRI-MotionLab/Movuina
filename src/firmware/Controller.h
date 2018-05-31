@@ -32,7 +32,8 @@ private:
   int magRange[6];// = {666, -666, 666, -666, 666, -666}; // magneto range values for calibration
   uint8_t magBuffer[14];
 
-  boolean isVibrating;
+  bool forceVibrating;
+  bool isVibrating;
   unsigned long dVibOn, dVibOff, dVibTotal;
   float rVib;
   unsigned long vibTimer;
@@ -69,6 +70,7 @@ public:
   sensors({ 0, 0, 0, 0, 0, 0, 0, 0, 0 }),
   magRange({ 666, -666, 666, -666, 666, -666 }),
   //------------
+  forceVibrating(false),
   isVibrating(false),
   dVibOn(1000),
   dVibOff(1000),
@@ -82,7 +84,7 @@ public:
   lastBtnDate(0),
   lockPress(false),
   initialized(false),
-  framePeriod(5), // ms
+  framePeriod(10), // ms
   heartBeatPeriod(1000), // ms
   lastHeartBeatDate(millis()),
   readMagState(0),
@@ -141,8 +143,9 @@ private:
   void sendFrame();
 
   void updateVibrator();
-  void updateButton();
-  
+  void updateButton();  
+  void updateOSCAddresses();
+
   void magnetometerAutoCalibration();
   float splitFloatDecimal(float f);
 };

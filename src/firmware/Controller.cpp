@@ -16,16 +16,8 @@ Controller::init(SerialCLI *s, OSCServer *o) {
   // accelGyro.setSleepEnabled(false);
   
   loadCredentials();
-
-  // outgoing messages:
-  sprintf(oscAddresses[oscAddrSensors], "/%s/sensors\0", getID());
-  sprintf(oscAddresses[oscAddrSettings], "/%s/settings\0", getID());
-  sprintf(oscAddresses[oscAddrHeartBeat], "/%s/heartbeat\0", getID());
-
-  // incoming messages:
-  sprintf(oscAddresses[oscAddrVibroPulse], "/%s/vibroPulse\0", getID());
-  sprintf(oscAddresses[oscAddrVibroNow], "/%s/vibroNow\0", getID());
-  
+  updateOSCAddresses();
+    
   initialized = true;
 }
 
@@ -79,7 +71,7 @@ Controller::routeOSCMessage(OSCMessage &msg) {
     msg.getAddress(address);
   
     //-------------------------
-    if (strcmp(address, oscAddresses[oscAddrVibroPulse]) == 0) { // todo : route by movuino identifier first
+    if (strcmp(address, oscAddresses[oscAddrVibroPulse]) == 0) {
       vibrationPulseCallback(msg);
       // sendSerialMessage("vibro", "received pulse");
     //-------------------------------------------
@@ -135,7 +127,8 @@ Controller::sendOSCSettings() {
 
 bool
 Controller::sendOSCSensors() {
-  if (initialized /* && !digitalRead(pinVibro) */) {
+  // if (initialized /* && !digitalRead(pinVibro) */) {
+  if (initialized && !digitalRead(pinVibro)) {
     /*
     String address("/");
     address += getID();
@@ -312,6 +305,7 @@ Controller::setSerialSettings(String *parameters, int nbArguments) {
     setPortOut(newPortOut);
     
     storeCredentials();
+    updateOSCAddresses();
     
     if (autoResetWiFi && WiFi.status() != WL_CONNECTED) {
       // oscServer->startWiFi();
@@ -349,16 +343,18 @@ Controller::vibrationPulse(int onDuration, int offDuration, int nb) {
 
 void
 Controller::vibrateNowCallback(OSCMessage &msg) {
-  vibrateNow((bool) msg.getInt(0));
+  vibrateNow(msg.getInt(0) != 0);
 }
 
 void
 Controller::vibrateNow(bool vibOnOff) {
   if (vibOnOff) {
+    forceVibrating = true;
     digitalWrite(pinVibro, HIGH);
   } else {
+    // isVibrating = false;
+    forceVibrating = false;
     digitalWrite(pinVibro, LOW);
-    isVibrating = false;
   }
 }
 
@@ -433,20 +429,24 @@ Controller::readMagnetometerValues() {
 
 void
 Controller::updateVibrator() {
-  int curTimeRatio100 = (int) (100 * (millis() - vibTimer) / (float) dVibTotal) ;
-
-  if (curTimeRatio100 % 100 <  (int)(100 * rVib)) {
-    digitalWrite(pinVibro, HIGH);
+  if (forceVibrating) {
+    digitalWrite(pinVibro, HIGH);    
   } else {
-    if (dVibOff != 0) {
-      digitalWrite(pinVibro, LOW);
+    int curTimeRatio100 = (int) (100 * (millis() - vibTimer) / (float) dVibTotal) ;
+  
+    if (curTimeRatio100 % 100 <  (int)(100 * rVib)) {
+      digitalWrite(pinVibro, HIGH);
+    } else {
+      if (dVibOff != 0) {
+        digitalWrite(pinVibro, LOW);
+      }
     }
-  }
-
-  // Shut down vibrator if number of cycles reach (set nVib to -1 for infinite cycles)
-  if (nVib != -1 && (millis() - vibTimer > nVib * dVibTotal)) {
-    digitalWrite(pinVibro, LOW);
-    isVibrating = false;
+  
+    // Shut down vibrator if number of cycles reach (set nVib to -1 for infinite cycles)
+    if (nVib != -1 && (millis() - vibTimer > nVib * dVibTotal)) {
+      digitalWrite(pinVibro, LOW);
+      isVibrating = false;
+    }
   }
 }
 
@@ -506,6 +506,18 @@ Controller::updateButton() {
       //*/
     }
   }
+}
+
+void
+Controller::updateOSCAddresses() {
+  // outgoing messages:
+  sprintf(oscAddresses[oscAddrSensors], "/%s/sensors\0", getID());
+  sprintf(oscAddresses[oscAddrSettings], "/%s/settings\0", getID());
+  sprintf(oscAddresses[oscAddrHeartBeat], "/%s/heartbeat\0", getID());
+
+  // incoming messages:
+  sprintf(oscAddresses[oscAddrVibroPulse], "/%s/vibroPulse\0", getID());
+  sprintf(oscAddresses[oscAddrVibroNow], "/%s/vibroNow\0", getID());  
 }
 
 void
