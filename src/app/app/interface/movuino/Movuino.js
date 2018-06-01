@@ -25,6 +25,7 @@ class Movuino extends EventEmitter {
 
     this.movuinoIP = defaultMovuinoIP;
     this.movuinoSettings = defaultMovuinoSettings;
+    this.heartBeatTimeout = null;
     this.initialized = false;
   }
 
@@ -70,7 +71,7 @@ class Movuino extends EventEmitter {
     ipc.on('movuino', (e, ...args) => {
       if (args[0] === 'movuino') {
         this.onMovuinoConnected(true);
-        ipc.send('oscserver', 'restart', {});
+        ipc.send('oscserver', 'restartMovuinoServer', {});
       }
     });
 
@@ -167,6 +168,17 @@ class Movuino extends EventEmitter {
           this.movuinoIP = args[1][1];
           this.updateMovuinoSettings(true);
         }
+
+        // CALL THIS ON EACH HEART BEAT :
+
+        if (this.heartBeatTimeout !== null) {
+          clearTimeout(this.heartBeatTimeout);
+        }
+
+        this.heartBeatTimeout = setTimeout((() => {
+          ipc.send('serialport', 'refresh');
+          this.onMovuinoConnected(false);
+        }).bind(this), 1200);
       }
     });
 
