@@ -2,7 +2,7 @@ import { ipcRenderer as ipc } from 'electron';
 import WaveformRenderer from '../../../shared/core/WaveformRenderer';
 import RepetitionsRenderer from '../../../shared/core/RepetitionsRenderer';
 import * as lfo from 'waves-lfo/client';
-import * as lfoMotion from 'lfo-motion';
+// import * as lfoMotion from 'lfo-motion';
 import EventEmitter from 'events';
 import Resampler from '../../../shared/lfos/Resampler';
 import Repetitions from '../../../shared/lfos/Repetitions';

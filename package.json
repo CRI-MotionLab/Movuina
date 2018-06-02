@@ -6,7 +6,8 @@
   "scripts": {
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
-    "versions": "node bin/versions.js",
+    "rebuild": "./node_modules/.bin/electron-rebuild.cmd",
+    "versions": "./node_modules/.bin/electron.cmd bin/versions.js",
     "test": "echo \"TODO: write some tests\" && exit 1"
   },
   "author": "Joseph Larralde",
@@ -22,7 +23,7 @@
     "marked": "^0.3.17",
     "mustache": "^2.3.0",
     "osc": "^2.2.0",
-    "serialport": "^6.1.1",
+    "serialport": "6.2.0",
     "serve-favicon": "^2.4.5",
     "uglify-js": "^3.3.14",
     "waves-lfo": "1.1.6"
@@ -33,6 +34,7 @@
     "browserify": "^16.1.0",
     "electron": "^1.8.4",
     "electron-packager": "^12.0.0",
+    "electron-rebuild": "1.7.3",
     "node-sass": "^4.7.2",
     "watch": "^1.0.2"
   }

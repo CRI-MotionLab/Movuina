@@ -14,7 +14,17 @@ App.prototype.start = function() {
   const task = 'starting app';
   logger.notifyAppTask(task);
 
-  this.app = spawn('electron', [ `${this.appIndexPath}`, JSON.stringify(this.config) ], {
+  let electron;
+  switch (process.platform) {
+    case 'win32':
+      electron = '.\\node_modules\\.bin\\electron.cmd';
+      break;
+    default:
+      electron = 'electron';
+      break;
+  }
+
+  this.app = spawn(electron, [ `${this.appIndexPath}`, JSON.stringify(this.config) ], {
     stdio: [ 'pipe', process.stdout, process.stderr ],
   });
 

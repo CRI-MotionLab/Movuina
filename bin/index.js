@@ -25,6 +25,13 @@ const distConfig = config.dist;
 const configPath = `bin/config/${configName}.js`;
 const app = new App('dist/app/app/main.js', config);
 
+// ensure paths from config are properly formatted for windows
+const pathKeys = Object.keys(paths);
+pathKeys.forEach((k) => {
+  paths[k] = path.normalize(paths[k]);
+});
+
+
 //======================== FOLDER STRUCTURE HOLDERS ==========================//
 
 let sassFiles;
