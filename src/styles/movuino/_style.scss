@@ -188,7 +188,7 @@ div#main-wrapper {
   position: absolute;
   overflow-x: hidden;
   overflow-y: scroll;
-  margin-bottom: 10px;
+  // margin-bottom: 10px;
 }
 
 div#main {
@@ -218,6 +218,10 @@ div#main {
 div#movuino, div#computer {
   padding: 20px;
   background-color: $darkBlue;
+}
+
+div#computer {
+  margin-bottom: 10px;
 }
 
 
