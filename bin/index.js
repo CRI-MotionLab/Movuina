@@ -138,6 +138,17 @@ function build() {
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 function package() {
+  let iconFilename;
+
+  switch (process.platform) {
+    case 'win32':
+      iconFilename = 'movuino.ico';
+      break;
+    default:
+      iconFilename = 'movuino.icns';
+      break;
+  }
+
   const nodeModulesPath = path.join(cwd, 'node_modules');
   fs.removeSync('dist/node_modules');
   fs.ensureSymlink(nodeModulesPath, 'dist/node_modules')
@@ -147,6 +158,7 @@ function package() {
       name: distConfig.app.name,
       out: paths.build,
       overwrite: true,
+      icon: path.join(paths.assetsSrc, iconFilename),
     });
   })
   .then((appPaths) => { console.log(appPaths); });
