@@ -214,15 +214,6 @@ Controller::sendSerialIPAddress() {
   if (initialized) {
     int ip[4];
     oscServer->getIPAddress(&ip[0]);
-    /*
-    String sip = String(ip[0]);
-    sip += ".";
-    sip += ip[1];
-    sip += ".";
-    sip += ip[2];
-    sip += ".";
-    sip += ip[3];
-    */
     String sip = String(ip[0]) + "." + ip[1] + "." + ip[2] + "." + ip[3];
     String address("ip");
     serialCLI->sendMessage(address, sip);
@@ -262,10 +253,14 @@ Controller::sendSerialSensors() {
 bool
 Controller::sendSerialHeartBeat() {
   if (initialized) {
+    int ip[4];
+    oscServer->getIPAddress(&ip[0]);
+    String sip = String(ip[0]) + "." + ip[1] + "." + ip[2] + "." + ip[3];
+    
     const char *heartbeat[] = {
       "heartbeat",
       oscServer->getWiFiState() ? "1" : "0",
-      oscServer->getStringIPAddress().c_str()
+      sip.c_str()
     };
 
     // send "heartbeat <wifi_connected> <movuino_ip_address>" every second
