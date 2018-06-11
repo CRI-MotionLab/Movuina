@@ -175,10 +175,10 @@ class Movuino extends EventEmitter {
           clearTimeout(this.heartBeatTimeout);
         }
 
-        this.heartBeatTimeout = setTimeout((() => {
-          ipc.send('serialport', 'refresh');
-          this.onMovuinoConnected(false);
-        }).bind(this), 1200);
+        // this.heartBeatTimeout = setTimeout((() => {
+        //   ipc.send('serialport', 'refresh');
+        //   this.onMovuinoConnected(false);
+        // }).bind(this), 1200);
       }
     });
 

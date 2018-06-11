@@ -38,7 +38,11 @@ class BaseOSCServer extends EventEmitter {
       remotePort: this.config.remotePort,
     });
 
-    this.server.open();
+    try {
+      this.server.open();
+    } catch (e) {
+      console.error('problem opening osc server');
+    }
 
     this.server.on('ready', () => {
       this.ready = true;
@@ -134,7 +138,9 @@ class OSCServer extends EventEmitter {
       this.emit('renderer', 'display', { target: 'localOut2', msg: msg });
     });
 
-    this.localServer.restart({ localAddress: getMyIP() });
+    // this.localServer.restart({ localAddress: getMyIP() });
+
+    this.localServer.restart();
   }
 
   executeCommand(cmd, args) {
