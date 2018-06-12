@@ -165,8 +165,6 @@ class Movuino extends EventEmitter {
           this.$movip3.value = parseInt(movuinoIP[2]);
           this.$movip4.value = parseInt(movuinoIP[3]);
 
-          console.log(args);
-
           this.movuinoIP = args[1][1];
           this.updateMovuinoSettings(true);
         }
