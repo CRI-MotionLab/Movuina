@@ -67,17 +67,25 @@ OSCServer::getMacAddress() {
 
 void
 OSCServer::getIPAddress(int *res) { // must be of type int[4]
-  IPAddress ip = WiFi.localIP();
-  for (int i = 0; i < 4; i++) {
-    *(res + i) = ip[i];
+  if (getWiFiState()) {
+    IPAddress ip = WiFi.localIP();
+    for (int i = 0; i < 4; i++) {
+      *(res + i) = ip[i];
+    }
   }
 }
 
 String
 OSCServer::getStringIPAddress() {
-  int ip[4];
+  int ip[4] = { 0, 0, 0, 0 };
   getIPAddress(&ip[0]);
-  String sip = String(ip[0]) + "." + ip[1] + "." + ip[2] + "." + ip[3];
+  String sip = String(ip[0]);
+  sip += ".";
+  sip += ip[1];
+  sip += ".";
+  sip += ip[2];
+  sip += ".";
+  sip += ip[3];
   return sip;
 }
 

@@ -31,17 +31,18 @@ class BaseOSCServer extends EventEmitter {
       });
     }
 
-    this.server = new osc.UDPPort({
-      localAddress: this.config.localAddress,
-      localPort: this.config.localPort,
-      remoteAddress: this.config.remoteAddress,
-      remotePort: this.config.remotePort,
-    });
-
     try {
+      this.server = new osc.UDPPort({
+        localAddress: this.config.localAddress,
+        localPort: this.config.localPort,
+        remoteAddress: this.config.remoteAddress,
+        remotePort: this.config.remotePort,
+      });
+
       this.server.open();
     } catch (e) {
       console.error('problem opening osc server');
+      this.stop();
     }
 
     this.server.on('ready', () => {
