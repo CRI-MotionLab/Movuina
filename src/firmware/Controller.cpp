@@ -273,7 +273,8 @@ Controller::sendSerialHeartBeat() {
 bool
 Controller::setSerialSettings(String *parameters, int nbArguments) {
   if (initialized) {
-    bool autoResetWiFi = false;
+    // set to false by default to trig restart wifi only if wifi settings changed
+    bool autoResetWiFi = true;
 
     setID((*parameters++).c_str());
 
@@ -302,9 +303,8 @@ Controller::setSerialSettings(String *parameters, int nbArguments) {
     storeCredentials();
     updateOSCAddresses();
     
-    if (autoResetWiFi && WiFi.status() != WL_CONNECTED) {
-      // oscServer->startWiFi();
-      oscServer->shutdownWiFi();
+    if (autoResetWiFi) { // && WiFi.status() != WL_CONNECTED) {
+      oscServer->shutdownWiFi();      
       oscServer->awakeWiFi();
     }
   }

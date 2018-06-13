@@ -67,6 +67,7 @@ OSCServer::getMacAddress() {
 
 void
 OSCServer::getIPAddress(int *res) { // must be of type int[4]
+  // sometimes we get weird ip address values, if it happens again check here :
   if (getWiFiState()) {
     IPAddress ip = WiFi.localIP();
     for (int i = 0; i < 4; i++) {
@@ -104,6 +105,8 @@ OSCServer::startWiFi() {
   WiFi.begin(controller->getSSID(), controller->getPass());
   digitalWrite(pinLedBat, LOW); // turn ON battery led
 
+  controller->sendSerialMessage(wifi, connecting);
+
   unsigned long startTimer = millis();
   while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 15000) { // originally 20000 (20s)
     digitalWrite(pinLedWifi, LOW);
@@ -121,6 +124,8 @@ OSCServer::startWiFi() {
     // Start server port (to receive messages)
     udp.begin(controller->getPortIn());
     digitalWrite(pinLedWifi, LOW); // turn ON wifi led
+
+    controller->sendSerialMessage(wifi, connected);
   } else {
     // why is this commented out ?
     // => because we didn't manage to connect
@@ -134,6 +139,8 @@ OSCServer::startWiFi() {
     delay(1);
     digitalWrite(pinLedWifi, HIGH); // turn OFF wifi led
     digitalWrite(pinLedBat, HIGH);  // turn OFF battery led
+
+    controller->sendSerialMessage(wifi, disconnected);
   }
 
   initialized = true;
@@ -150,6 +157,8 @@ OSCServer::shutdownWiFi() {
     delay(1);
     digitalWrite(pinLedWifi, HIGH); // turn OFF wifi led
     digitalWrite(pinLedBat, HIGH);  // turn OFF battery led
+
+    controller->sendSerialMessage(wifi, disconnected);
   }
 }
 
@@ -170,6 +179,8 @@ OSCServer::awakeWiFi() {
     WiFi.begin(controller->getSSID(), controller->getPass());
     digitalWrite(pinLedBat, LOW); // turn ON battery led
 
+    controller->sendSerialMessage(wifi, connecting);
+  
     //Blink wifi led while wifi is connecting
     unsigned long startTimer = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - startTimer < 15000) { // originally 20000 (20s)
@@ -187,8 +198,12 @@ OSCServer::awakeWiFi() {
       // Start server port (to receive message)
       udp.begin(controller->getPortIn());
       digitalWrite(pinLedWifi, LOW); // turn ON wifi led
+    
+      controller->sendSerialMessage(wifi, connected);
     } else {
       digitalWrite(pinLedWifi, HIGH); // turn OFF wifi led
+
+      controller->sendSerialMessage(wifi, disconnected);
     }
   }
 }

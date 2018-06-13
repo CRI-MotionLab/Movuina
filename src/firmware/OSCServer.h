@@ -16,12 +16,21 @@ class Controller;
 
 class OSCServer {
 private:
+  String wifi;
+  String disconnected;
+  String connecting;
+  String connected;
+  
   bool initialized;
   WiFiUDP udp;
   Controller *controller;
 
 public:
   OSCServer(Controller *c) :
+  wifi("wifi"),
+  disconnected("disconnected"),
+  connecting("connecting"),
+  connected("connected"),
   initialized(false), controller(c) {
   }
 
