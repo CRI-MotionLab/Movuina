@@ -1,6 +1,6 @@
 import Canvas2DRenderer from './Canvas2DRenderer';
 
-class BargraphRenderer extends Canvas2DRenderer {
+class SignedBargraphRenderer extends Canvas2DRenderer {
   constructor(canvas, colors = [ '#f00', '#0f0', '#00f' ]) {
     super(canvas);
     this.colors = colors;
@@ -21,12 +21,20 @@ class BargraphRenderer extends Canvas2DRenderer {
       ctx.fillStyle = this.colors[i % this.colors.length];
       var x = i * w;
 
-      var y = (1 - this.data[i]) * c.height;
-      var h = this.data[i] * c.height;
-
+      // we assume the data is signed
+      if (this.data[i] > 0) {
+        var y = (1 - this.data[i]) * c.height * 0.5;
+        var h = this.data[i] * c.height * 0.5;
+      } else {
+        var y = c.height * 0.5;
+        var h = -this.data[i] * c.height * 0.5;
+      }
       ctx.fillRect(x, y, w, h);
+
+      //var y = this.data[i] * c.height;
+      //ctx.fillRect(x, y, w, c.height);
     }
   }
 };
 
-export default BargraphRenderer;
+export default SignedBargraphRenderer;
