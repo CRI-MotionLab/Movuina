@@ -1,4 +1,4 @@
-# Movuinode
+# Movuina
 
 ## electron application for movuino sensors and more
 
