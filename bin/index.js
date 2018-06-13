@@ -2,11 +2,14 @@ const fs = require('fs-extra');
 const path = require('path');
 const watch = require('watch');
 const packager = require('electron-packager');
+const childProcess = require('child_process');
 
 const util = require('./util');
 const transpiler = require('./transpiler');
 const App = require('./app');
 const logger = require('./logger');
+
+const spawn = childProcess.spawn;
 
 //================================== UTIL ====================================//
 
@@ -92,6 +95,8 @@ if (process.argv.length > 2) {
   } else if (process.argv[2] === 'watch') {
     build().then(start);
     watchSource();
+  } else if (process.argv[2] === 'version') {
+    versions();
   }
 }
 
@@ -139,6 +144,22 @@ function build() {
       logger.notifyDone();
       resolve();
     });
+  });
+}
+
+function versions() {
+  let electron;
+  switch (process.platform) {
+    case 'win32':
+      electron = '.\\node_modules\\.bin\\electron.cmd';
+      break;
+    default:
+      electron = 'electron';
+      break;
+  }
+
+  spawn(electron, [ 'bin/versions.js', null ], {
+    stdio: [ 'pipe', process.stdout, process.stderr ],
   });
 }
 

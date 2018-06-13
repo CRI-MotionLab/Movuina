@@ -4,10 +4,10 @@
   "description": "hub application for movuino sensors and more",
   "main": "app/app/main.js",
   "scripts": {
+    "version": "node bin/index.js version",
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
     "rebuild": "./node_modules/.bin/electron-rebuild.cmd",
-    "versions": "./node_modules/.bin/electron.cmd bin/versions.js",
     "test": "echo \"TODO: write some tests\" && exit 1"
   },
   "author": "Joseph Larralde",
