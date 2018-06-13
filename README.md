@@ -14,7 +14,7 @@ Three `npm` scripts are available:
 * `npm run build` will build the application into the `dist` directory, and package it into the `build` directory using `electron-packager`.
 * `npm run version` will print a list of the versions of all `electron`'s dependencies (`node`, etc).
 
-&#x1F534; At the moment this project doesn't use `electron-rebuild`, so you should use utilities like `n` or `nvm` to use the same version of node.js as the one reported by `npm run version`
+&#x26A0; At the moment this project doesn't use `electron-rebuild`, so you should use utilities like `n` or `nvm` to use the same version of node.js as the one reported by `npm run version`
 
 #### structure of this repository
 
