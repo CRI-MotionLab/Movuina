@@ -148,7 +148,8 @@ class OSCServer extends EventEmitter {
     if (cmd === 'stopMovuinoServer') {
       this.movuinoServer.stop();
     } else if (cmd === 'restartMovuinoServer') {
-      this.movuinoServer.restart(args);
+      const realArgs = Object.assign(args, { localAddress: getMyIP() });
+      this.movuinoServer.restart(realArgs);
     } else if (cmd === 'oscid') {
       this.oscId = args;
     } else if (cmd === 'sendOSC') {

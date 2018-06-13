@@ -68,6 +68,10 @@ label.bad {
   color: #e00;
 }
 
+label.neutral {
+  color: $lightBlue;
+}
+
 label.good {
   color: #0e0;
 }
@@ -80,6 +84,15 @@ button.bad {
 button.bad:active {
   box-shadow: inset 2px 2px 12px #d00;
 }
+
+button.neutral {
+  background-color: $lightBlue;
+  // box-shadow: inset -2px -2px 12px #d00;
+}
+
+// button.neutral:active {
+//   box-shadow: inset 2px 2px 12px #d00;
+// }
 
 button.good {
   background-color: #0e0;

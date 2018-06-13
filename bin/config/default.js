@@ -36,6 +36,9 @@ const config = {
     packageSrc: 'package.json',
     packageDist: 'dist/package.json',
 
+    nodeModules: 'node_modules',
+    nodeModulesDist: 'dist/node_modules',
+
     // create those folders / files automatically
 
     databaseDist: 'dist/db',
@@ -49,7 +52,7 @@ const config = {
     //------------------------------ application -----------------------------//
 
     app: {
-      name: 'Movuinode',
+      name: 'Movuina',
       root: '', // for relative paths (images in views etc)
       stylePrefix: 'public/css',
       scriptPrefix: 'app',
@@ -58,7 +61,7 @@ const config = {
         main: {
           template: 'app/main',
           data: {
-            title: 'Movuinode',
+            title: 'Movuina',
             style: 'main',
             script: 'movuino',
           }

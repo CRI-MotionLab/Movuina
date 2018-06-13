@@ -103,9 +103,11 @@ class Movuino extends EventEmitter {
     this.$movip4 = document.querySelector('#movuino-ip-4');
 
     this.$updateSettings = document.querySelector('#update-movuino-settings-btn');
-    this.$wiFiOnOff = document.querySelector('#movuino-wifi-on-off-btn');
+    this.$wiFiCircle = document.querySelector('#movuino-connected-circle');
+    this.$wiFiStatus = document.querySelector('#movuino-connected-label');
+    // this.$wiFiOnOff = document.querySelector('#movuino-wifi-on-off-btn');
 
-    this.$getMovuinoIP = document.querySelector('#get-movuino-ip');
+    // this.$getMovuinoIP = document.querySelector('#get-movuino-ip');
 
     this.onMovuinoConnected(false);
 
@@ -139,8 +141,8 @@ class Movuino extends EventEmitter {
         this.$portIn.value = parseInt(a[4]);
         this.$portOut.value = parseInt(a[5]);
 
-        this.$sendOSCSensors.checked = parseInt(a[6]) === 1;
-        this.$sendSerialSensors.checked = parseInt(a[7]) === 1;
+        // this.$sendOSCSensors.checked = parseInt(a[6]) === 1;
+        // this.$sendSerialSensors.checked = parseInt(a[7]) === 1;
 
         this.updateMovuinoSettings();
       } else if (args[0] === 'ip') {
@@ -155,9 +157,12 @@ class Movuino extends EventEmitter {
         this.movuinoIP = arg;
         this.updateMovuinoSettings(true);
       } else if (args[0] === 'heartbeat') {
-        if ((args[1][0] === '1' && !this.$wiFiOnOff.checked) ||
-            (args[1][0] === '0' && this.$wiFiOnOff.checked)) {
-          this.$wiFiOnOff.checked = !this.$wiFiOnOff.checked;
+        // if ((args[1][0] === '1' && !this.$wiFiOnOff.checked) ||
+        //     (args[1][0] === '0' && this.$wiFiOnOff.checked)) {
+        //   this.$wiFiOnOff.checked = !this.$wiFiOnOff.checked;
+        this.setWiFiState(args[1][0] === '1' ? 'connected' : 'disconnected');
+
+        if (this.movuinoIP !== args[1][1]) {
 
           const movuinoIP = args[1][1].split('.');
           this.$movip1.value = parseInt(movuinoIP[0]);
@@ -179,6 +184,8 @@ class Movuino extends EventEmitter {
         //   ipc.send('serialport', 'refresh');
         //   this.onMovuinoConnected(false);
         // }).bind(this), 1200);
+      } else if (args[0] === 'wifi') {
+        this.setWiFiState(args[1][0]);
       }
     });
 
@@ -197,9 +204,9 @@ class Movuino extends EventEmitter {
       ]);
     });
 
-    this.$wiFiOnOff.addEventListener('change', (e) => {
-      ipc.send('movuino', 'wifi!', this.$wiFiOnOff.checked ? '1' : '0');
-    });
+    // this.$wiFiOnOff.addEventListener('change', (e) => {
+    //   ipc.send('movuino', 'wifi!', this.$wiFiOnOff.checked ? '1' : '0');
+    // });
 
     // prepare canvas for drawing
 
@@ -223,15 +230,57 @@ class Movuino extends EventEmitter {
         const acc = [ parseFloat(a[0]), parseFloat(a[1]), parseFloat(a[2]) ];
         const gyr = [ parseFloat(a[3]), parseFloat(a[4]), parseFloat(a[5]) ];
         const mag = [ parseFloat(a[6]), parseFloat(a[7]), parseFloat(a[8]) ];
+        for (let i = 0; i < 3; ++i) {
+          acc[i] = acc[i] * 0.5 + 0.5;
+          gyr[i] = gyr[i] * 0.5 + 0.5;
+          mag[i] = mag[i] * 0.5 + 0.5;
+        }
         this.setBargraphData([ acc, gyr, mag ]);
       }
     });
 
-    this.$getMovuinoIP.addEventListener('click', () => {
-      ipc.send('movuino', 'address?');
-    });
+    // this.$getMovuinoIP.addEventListener('click', () => {
+    //   ipc.send('movuino', 'address?');
+    // });
 
     this.initialized = true;
+  }
+
+  setWiFiState(state) {
+    if (this.$wiFiStatus.classList.contains('good')) {
+      this.$wiFiCircle.classList.remove('good');
+      this.$wiFiStatus.classList.remove('good');
+    }
+
+    if (this.$wiFiStatus.classList.contains('neutral')) {
+      this.$wiFiCircle.classList.remove('neutral');
+      this.$wiFiStatus.classList.remove('neutral');
+    }
+
+    if (this.$wiFiStatus.classList.contains('bad')) {
+      this.$wiFiCircle.classList.remove('bad');
+      this.$wiFiStatus.classList.remove('bad');
+    }
+
+    switch (state) {
+      case 'disconnected':
+        this.$wiFiCircle.classList.add('bad');
+        this.$wiFiStatus.innerHTML = 'Movuino disconnected';
+        this.$wiFiStatus.classList.add('bad');
+        break;
+      case 'connecting':
+        this.$wiFiCircle.classList.add('neutral');
+        this.$wiFiStatus.innerHTML = 'Connecting movuino ...';
+        this.$wiFiStatus.classList.add('neutral');
+        break;
+      case 'connected':
+        this.$wiFiCircle.classList.add('good');
+        this.$wiFiStatus.innerHTML = 'Movuino connected';
+        this.$wiFiStatus.classList.add('good');
+        break;
+      default:
+        break;
+    }
   }
 
   onMovuinoConnected(connected) {
@@ -246,10 +295,10 @@ class Movuino extends EventEmitter {
     this.$getMyIP.disabled = !connected;
     this.$updateSettings.disabled = !connected;
 
-    [ this.$sendOSCSensors, this.$sendSerialSensors, this.$wiFiOnOff ].forEach((item) => {
-      item.checked = false;
-      item.disabled = !connected;
-    });
+    // [ this.$sendOSCSensors, this.$sendSerialSensors, this.$wiFiOnOff ].forEach((item) => {
+    //   item.checked = false;
+    //   item.disabled = !connected;
+    // });
 
     if (!connected) {
       ipc.send('oscserver', 'stopMovuinoServer');
@@ -265,8 +314,8 @@ class Movuino extends EventEmitter {
     const hostIP = `${this.$ip1.value}.${this.$ip2.value}.${this.$ip3.value}.${this.$ip4.value}`;
     const portIn = parseInt(this.$portIn.value);
     const portOut = parseInt(this.$portOut.value);
-    const sendOSCSensors = this.$sendOSCSensors.checked;
-    const sendSerialSensors = this.$sendSerialSensors.checked;
+    // const sendOSCSensors = this.$sendOSCSensors.checked;
+    // const sendSerialSensors = this.$sendSerialSensors.checked;
     // console.log(ssid + ' ' + password + ' ' + ip);
 
     if (forceUpdate ||
@@ -292,8 +341,8 @@ class Movuino extends EventEmitter {
       hostIP: hostIP,
       portIn: portIn,
       portOut: portOut,
-      sendOSCSensors: sendOSCSensors,
-      sendSerialSensors: sendSerialSensors,
+      sendOSCSensors: true, // sendOSCSensors,
+      sendSerialSensors: true, // sendSerialSensors,
     };
   }
 

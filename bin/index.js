@@ -75,6 +75,15 @@ function copyPackageAndConfigFile() {
   fs.copySync(configPath, paths.configDist);
 }
 
+function symLinkAllNodeModulesInDist() {
+  // fs.removeSync('dist/node_modules');
+  // fs.ensureDir('dist/node_modules');
+  // const files = fs.readdirSync('node_modules');
+  // files.forEach(function(file) {
+  //   fs.ensureSymlink(path.join(cwd, 'node_modules', file), path.join(cwd, 'dist/node_modules', file));
+  // });
+}
+
 //============================ SCRIPT SELECTOR =============================//
 
 if (process.argv.length > 2) {
@@ -149,17 +158,33 @@ function package() {
       break;
   }
 
-  const nodeModulesPath = path.join(cwd, 'node_modules');
-  fs.removeSync('dist/node_modules');
-  fs.ensureSymlink(nodeModulesPath, 'dist/node_modules')
-  .then(() => {
-    return packager({
-      dir: paths.dist,
-      name: distConfig.app.name,
-      out: paths.build,
-      overwrite: true,
-      icon: path.join(paths.assetsSrc, iconFilename),
-    });
+  // LIKE THIS, ONLY THE SYMLINK GETS COPIED SO THE PACKAGE DOESN'T WORK
+  // fs.removeSync(distNodeModulesPath);
+  // fs.ensureSymlink(nodeModulesPath, distNodeModulesPath)
+  // .then(() => {
+  //   return packager({
+  //     dir: paths.dist,
+  //     name: distConfig.app.name,
+  //     out: paths.build,
+  //     overwrite: true,
+  //     icon: path.join(paths.assetsSrc, iconFilename),
+  //   });
+  // })
+  // .then((appPaths) => { console.log(appPaths); });
+
+  // issue fixed thanks to
+  // https://github.com/electron-userland/electron-packager/issues/527
+  // (was packaging symlink to node_modules, not original node_module folder into the build)
+
+  // LIKE THIS, NO PROBLEM
+  fs.removeSync(paths.nodeModules);
+  fs.copySync(paths.nodeModules, paths.nodeModulesDist);
+  packager({
+    dir: paths.dist,
+    name: distConfig.app.name,
+    out: paths.build,
+    overwrite: true,
+    icon: path.join(paths.assetsSrc, iconFilename),
   })
   .then((appPaths) => { console.log(appPaths); });
 }

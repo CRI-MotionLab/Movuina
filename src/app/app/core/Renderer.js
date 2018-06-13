@@ -79,13 +79,11 @@ class Renderer extends EventEmitter {
       // this is how we capture Alt+Cmd+I shortcut to show the dev tools
       // even in production (packaged)
 
-      globalShortcut.register(process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I', () => {
-        this.window.webContents.send('renderer', 'toggledevtools');
-      });
+      // globalShortcut.register(process.platform === 'darwin' ? 'Alt+Cmd+I' : 'Ctrl+Shift+I', () => {
+      //   this.window.webContents.send('renderer', 'toggledevtools');
+      // });
 
-      // find a way to forward all messages this way (or by renderer name channel)
-      // => this seems to work fine
-
+      // forward all messages starting with one of the following words :
       const channels = [
         'serialport',
         'movuino',

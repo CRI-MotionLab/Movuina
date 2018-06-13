@@ -29,6 +29,33 @@
   </div>
 
   <div id="wifi-configuration-container" class="section-container">
+
+    <div id="wifi-configuration-movuino" class="section-subcontainer">
+      <div id="wifi-configuration-movuino-sensors">
+        <div class="inline third">
+          <!-- <canvas id="movuino-accelerometers" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-accelerometers"></canvas>
+          </div>
+          <div class="subtle">Accelerometer</div>
+        </div>
+        <div class="inline third">
+          <!-- <canvas id="movuino-gyroscopes" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-gyroscopes"></canvas>
+          </div>
+          <div class="subtle">Gyroscope</div>
+        </div>
+        <div class="inline third">
+          <!-- <canvas id="movuino-magnetometers" width="100" height="100"></canvas> -->
+          <div class="thin">
+            <canvas id="movuino-magnetometers"></canvas>
+          </div>
+          <div class="subtle">Magnetometer</div>
+        </div>
+      </div>
+    </div>
+
     <div>
       <h1> Wifi configuration </h1>
     </div>
@@ -77,6 +104,7 @@
         </div>
       </div>
 
+      <!--
       <div>
         <div class="inline reset">
           <div> Send OSC sensors </div>
@@ -88,14 +116,17 @@
           <input id="send-serial-sensors" type="checkbox">
         </div>
       </div>
+      -->
 
       <div id="update-movuino-settings">
         <button id="update-movuino-settings-btn" class="blue-rounded">
-          Update settings
+          <!-- Update settings -->
+          Refresh connection
         </button>
       </div>
 
       <div id="movuino-wifi-on-off">
+        <!--
         <div class="reset"> WiFi </div>
         <div>
           <label class="switch">
@@ -103,38 +134,21 @@
             <span class="slider round"></span>
           </label>
         </div>
-      </div>
-    </div>
+        -->
 
-    <div id="wifi-configuration-movuino" class="section-subcontainer">
-      <div id="wifi-configuration-movuino-sensors">
-        <div class="inline third">
-          <!-- <canvas id="movuino-accelerometers" width="100" height="100"></canvas> -->
-          <div class="thin">
-            <canvas id="movuino-accelerometers"></canvas>
-          </div>
-          <div class="subtle">Accelerometer</div>
-        </div>
-        <div class="inline third">
-          <!-- <canvas id="movuino-gyroscopes" width="100" height="100"></canvas> -->
-          <div class="thin">
-            <canvas id="movuino-gyroscopes"></canvas>
-          </div>
-          <div class="subtle">Gyroscope</div>
-        </div>
-        <div class="inline third">
-          <!-- <canvas id="movuino-magnetometers" width="100" height="100"></canvas> -->
-          <div class="thin">
-            <canvas id="movuino-magnetometers"></canvas>
-          </div>
-          <div class="subtle">Magnetometer</div>
-        </div>
+        <button id="movuino-connected-circle" class="circle bad"></button>
+        <label id="movuino-connected-label" class="bad">
+          Disconnected from WiFi
+        </label>
       </div>
 
       <div id="wifi-configuration-movuino-get-ip">
+        <!--
         <button id="get-movuino-ip" class="blue-rounded">
           Get Movuino IP address
         </button>
+        -->
+        Movuino IP address :
       </div>
 
       <div id="wifi-configuration-movuino-ip">
