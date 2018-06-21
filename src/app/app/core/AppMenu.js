@@ -32,7 +32,7 @@ class AppMenu extends EventEmitter {
             id: 'toggle-osc-connections',
             label: 'Toggle Show OSC Connections',
             type: 'checkbox',
-            accelerator: 'CmdOrCtrl+C',
+            accelerator: 'CommandOrControl+C',
             //click: () => { callbacks.toggleOSCConnection(this.menu); },
             click: (item, BrowserWindow) => {
               this.emit('showOSCConnections', item.checked);
@@ -52,8 +52,40 @@ class AppMenu extends EventEmitter {
       {
         role: 'window',
         submenu: [
-          {role: 'minimize'},
-          {role: 'close'}
+          {role: 'minimize', accelerator: null},
+          {role: 'close', accelerator: null}
+        ]
+      },
+      {
+        label: 'Devices',
+        submenu: [
+          {
+            id: 'add-movuino-device',
+            label: 'Add Movuino Device',
+            type: 'normal',
+            accelerator: 'CommandOrControl+T',
+            click: (item, BrowserWindow) => {
+              this.emit('device' ,'add');
+            }
+          },
+          {
+            id: 'remove-movuino-device',
+            label: 'Remove Movuino Device',
+            type: 'normal',
+            accelerator: 'CommandOrControl+W',
+            click: (item, BrowserWindow) => {
+              this.emit('device', 'removecurrent');
+            }
+          },
+          {
+            id: 'next-movuino-device',
+            label: 'Next Movuino Device',
+            type: 'normal',
+            accelerator: 'Control+Tab',
+            click: (item, BrowserWindow) => {
+              this.emit('device', 'next');
+            }
+          }
         ]
       },
       {

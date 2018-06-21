@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import serial from 'serialport';
+import fs from 'fs-extra';
 
 class Serial extends EventEmitter {
   constructor(config) {
@@ -53,7 +54,8 @@ class Serial extends EventEmitter {
           // don't care
         }
 
-        this.emit('ports', p);
+        this._checkIfDriverIsInstalled();
+        this.emit('serial', 'ports', p);
       })
       .catch(err => {
         console.error(err);
@@ -73,6 +75,27 @@ class Serial extends EventEmitter {
       } else {
         this._createPort(p);
       }
+    }
+  }
+
+  _checkIfDriverIsInstalled() {
+    let driverIsInstalled = true;
+
+    if (process.platform === 'darwin') { // don't know for others ...
+      driverIsInstalled = false;
+      let files = fs.readdirSync('/System/Library/Extensions');
+      files = files.concat(fs.readdirSync('/Library/Extensions'));
+
+      for (let i = 0; i < files.length; ++i) {
+        if (files[i].indexOf('SiLabsUSBDriver') !== -1) {
+          driverIsInstalled = true;
+          break;
+        }
+      }
+    }
+
+    if (!driverIsInstalled) {
+      this.emit('serial', 'nodriverinstalled', this.config.dist.drivers.downloadUrl);
     }
   }
 

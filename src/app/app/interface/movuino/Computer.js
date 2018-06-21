@@ -1,6 +1,6 @@
 import { ipcRenderer as ipc } from 'electron';
-import WaveformRenderer from '../../../shared/core/WaveformRenderer';
-import RepetitionsRenderer from '../../../shared/core/RepetitionsRenderer';
+import WaveformRenderer from '../../../shared/renderers/WaveformRenderer';
+import RepetitionsRenderer from '../../../shared/renderers/RepetitionsRenderer';
 import * as lfo from 'waves-lfo/client';
 // import * as lfoMotion from 'lfo-motion';
 import EventEmitter from 'events';
@@ -31,10 +31,12 @@ class Computer extends EventEmitter {
     this.onPointStyleMenuValueChanged = this.onPointStyleMenuValueChanged.bind(this);
     this.onResamplingFrequencySliderValueChanged = this.onResamplingFrequencySliderValueChanged.bind(this);
     this.onFilterSizeSliderValueChanged = this.onFilterSizeSliderValueChanged.bind(this);
+    this.onRecordDataBtnClick = this.onRecordDataBtnClick.bind(this);
 
     this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
     this.displayBridgeCallback = this.displayBridgeCallback.bind(this);
     this.rawBridgeCallback = this.rawBridgeCallback.bind(this);
+    this.processRecordedData = this.processRecordedData.bind(this);
     this.repetitionsBridgeCallback = this.repetitionsBridgeCallback.bind(this);
     this.gestureRecognitionBridgeCallback = this.gestureRecognitionBridgeCallback.bind(this);
 
@@ -66,6 +68,10 @@ class Computer extends EventEmitter {
     this.rawBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.rawBridgeCallback(frame); },
     });
+
+    this.rawRecorder = new lfo.sink.DataRecorder({
+      callback: (data) => { this.processRecordedData(data); }
+    })
 
     this.filteredAccSelector = new lfo.operator.Select({ indexes: [ 0, 1, 2 ] });
     // this.accMagnitude = new lfo.operator.Magnitude();
@@ -104,6 +110,7 @@ class Computer extends EventEmitter {
     // this.mvAvrg.connect(this.displayBridge);
 
     this.mvAvrg.connect(this.rawBridge);
+    this.mvAvrg.connect(this.rawRecorder);
 
     // this.mvAvrg.connect(this.repetitions);
     // this.repetitions.connect(this.repetitionsBridge);
@@ -271,14 +278,14 @@ class Computer extends EventEmitter {
     });
 
     this.$zoom = document.querySelector('#zoom-slider');
-    this.$zoom.addEventListener('change', () => {
+    this.$zoom.addEventListener('input', () => {
       this.onZoomSliderValueChanged();
     });
     this.$zoom.value = 0;
     this.onZoomSliderValueChanged();
 
     this.$lineWidth = document.querySelector('#line-width-slider');
-    this.$lineWidth.addEventListener('change', () => {
+    this.$lineWidth.addEventListener('input', () => {
       this.onLineWidthSliderValueChanged();
     });
     this.$lineWidth.value = 50;
@@ -295,18 +302,27 @@ class Computer extends EventEmitter {
     });
 
     this.$resamplingFrequency = document.querySelector('#resampling-frequency-slider');
-    this.$resamplingFrequency.addEventListener('change', () => {
+    this.$resamplingFrequency.addEventListener('input', () => {
       this.onResamplingFrequencySliderValueChanged();
     });
     this.$resamplingFrequency.value = 50;
     this.onResamplingFrequencySliderValueChanged();
 
     this.$filterSize = document.querySelector('#filter-size-slider');
-    this.$filterSize.addEventListener('change', () => {
+    this.$filterSize.addEventListener('input', () => {
       this.onFilterSizeSliderValueChanged();
     });
     this.$filterSize.value = 0;
     this.onFilterSizeSliderValueChanged();
+
+    //============== RECORDER ==============//
+
+    this.$recordDataBtn = document.querySelector('#record-data-btn');
+    this.$recordDataBtn.addEventListener('click', () => {
+      this.onRecordDataBtnClick();
+    });
+
+    this.$recordDataTxt = document.querySelector('#record-data-txt');
 
     window.onresize = () => {
       for (let i = 0; i < 3; i++) {
@@ -373,6 +389,50 @@ class Computer extends EventEmitter {
     this.mvAvrg.params.set('order', this.filterSize);
   }
 
+  onRecordDataBtnClick() {
+    if (this.$recordDataBtn.classList.contains('on')) {
+      this.$recordDataBtn.classList.remove('on');
+      this.rawRecorder.stop();
+      if (this.recordInterval) {
+        clearInterval(this.recordInterval);
+        this.recordInterval = null;
+      }
+    } else {
+      this.$recordDataBtn.classList.add('on');
+      this.rawRecorder.start();
+      const now = Date.now();
+      let hours;
+      let minutes;
+      let seconds;
+      let ms;
+
+      function formatWithZeroes(num, length) {
+        let r = '' + num;
+        while (r.length < length) {
+          r = '0' + r;
+        }
+        return r;
+      }
+
+      this.recordInterval = setInterval(() => {
+        const realNow = Date.now() - now;
+        hours = Math.floor(realNow / 3600000) % 24;
+        minutes = Math.floor(realNow / 60000) % 60;
+        seconds = Math.floor(realNow / 1000) % 60;
+        ms = realNow % 1000;
+        // this.$recordDataTxt.innerHTML = `
+        //   ${formatWithZeroes(hours, 2)} h
+        //   ${formatWithZeroes(minutes, 2)} min
+        //   ${formatWithZeroes(seconds, 2)} s
+        //   ${formatWithZeroes(ms, 3)} ms
+        // `;
+        this.$recordDataTxt.innerHTML = `
+          ${formatWithZeroes(hours, 2)}:${formatWithZeroes(minutes, 2)}:${formatWithZeroes(seconds, 2)}:${formatWithZeroes(ms, 3)}
+        `;
+      }, 40);
+    }
+  }
+
   //=========================== waves-lfo bridges
 
   displayBridgeCallback(frame) {
@@ -406,6 +466,30 @@ class Computer extends EventEmitter {
         address: '/filteredSensors',
         args: arrayFrame,
       },
+    });
+  }
+
+  processRecordedData(data) {
+    if (!Array.isArray(data)) return;
+
+    console.log(data);
+    const recording = [];
+    // for (let i = 0; i < data; i++)
+    data.forEach((datum) => {
+      const item = {
+        time: datum.time,
+        data: []
+      };
+
+      for (let i = 0; i < datum.data.length; i++) {
+        item.data.push(datum.data[i]);
+      }
+
+      recording.push(item);
+    });
+
+    ipc.send('renderer', 'recording', {
+      data: recording
     });
   }
 

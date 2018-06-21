@@ -1,0 +1,88 @@
+// todo : put these variables (duplicated from _style.scss) into a _globals.scss file
+// that should be imported first in main.
+
+$lightYellow: #fff17a;
+$lightBlue: #7cdde2;
+$lightRed: #f45a54;
+
+$darkBlue: #4951D0;
+$darkBlueShadow: #2f36a7;
+
+$mediaPath: '../media/';
+$closeIconPath: $mediaPath + 'Icon_Close.png';
+
+nav ul {
+  display: block;
+  z-index: -10;
+  text-align: left;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 30px;
+  line-height: 30px;
+
+  user-selectable: false;
+}
+
+nav li {
+  display: inline-flex;
+  border-top-left-radius: 10px 10px;
+  border-top-right-radius: 10px 10px;
+  border-bottom-left-radius: 10px -10px;
+  border-bottom-right-radius: 10px -10px;
+  border: 0px;
+
+  background-color: $darkBlueShadow;
+  height: 30px;
+  line-height: 30px;
+
+  margin-right: 5px;
+
+  justify-content: center;
+  align-items: center;
+}
+
+$closeIconSize: 15px;
+
+nav li div {
+  display: inline-flex;
+  height: $closeIconSize;
+  // text-align: center;
+  // vertical-align: middle;
+  justify-content: center;
+  align-items: center;
+  margin: 0px 5px;
+
+  // a {
+    text-decoration: none;
+    color: #eee;
+    padding: 0;
+    cursor: default;
+    // padding-left: 5px;
+    // padding-bottom: 10px;
+  // }
+}
+
+nav li div.close-icon {
+  display: inline-block;
+  position: relative;
+  background: url($closeIconPath);
+  width: $closeIconSize;
+  height: $closeIconSize;
+  // height: 30px;
+  line-height: 30px;
+  // margin: 5px;
+  margin-left: 0px;
+  background-size: $closeIconSize $closeIconSize;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+#content {
+  // border: 1px solid;
+}
+
+#selected {
+  // padding-bottom: 1px;
+  background-color: $darkBlue;
+}

@@ -19,7 +19,7 @@ const oscServer = new OSCServer(config);
 
 //--------------------------------------- serial <> renderer communication
 
-renderer.on('serialport', (cmd, arg) => { // 'refresh' or 'ports'
+renderer.on('serial', (cmd, arg) => { // 'refresh' or 'ports'
   serial.executeSerialCommand(cmd, arg);
 });
 
@@ -27,8 +27,11 @@ renderer.on('movuino', (cmd, arg) => {
   serial.executeMovuinoCommand(cmd, arg);
 });
 
-serial.on('ports', p => {
-  renderer.send('serialport', 'ports', p)
+// renderer.on('tabs', (cmd, args) => {
+// });
+
+serial.on('serial', (cmd, args) => {
+  renderer.send('serial', cmd, args);
 });
 
 serial.on('movuino', (cmd, args) => {
@@ -41,6 +44,10 @@ renderer.on('oscserver', (cmd, args) => {
 
 oscServer.on('renderer', (cmd, args) => {
   renderer.send('oscserver', cmd, args);
+});
+
+AppMenu.on('device', (cmd, args) => {
+  renderer.send('menu', 'device', cmd, args);
 });
 
 AppMenu.on('showOSCConnections', (show) => {

@@ -65,14 +65,17 @@ class Renderer extends EventEmitter {
 
       render();
 
-      ipc.on('renderer', (e, arg) => {
-        if (arg === 'refresh' && this.window !== null) {
+      ipc.on('renderer', (e, cmd, arg) => {
+        if (cmd === 'refresh' && this.window !== null) {
           render();
-        } else if (arg === 'getmyip') {
+        } else if (cmd === 'getmyip') {
           const ip = getMyIP();
           if (ip !== null) {
             this.send('renderer', 'getmyip', ip);
           }
+        } else if (cmd === 'recording') {
+          this.send('renderer', 'recording', arg);
+          // console.log('received recording : ' + JSON.stringify(arg, null, 2));
         }
       });
 
@@ -85,7 +88,7 @@ class Renderer extends EventEmitter {
 
       // forward all messages starting with one of the following words :
       const channels = [
-        'serialport',
+        'serial',
         'movuino',
         'oscserver',
       ];
@@ -103,6 +106,7 @@ class Renderer extends EventEmitter {
 
       this.window.on('close', (e) => {
         e.preventDefault();
+        this.send('renderer', 'closecurrenttab');
       });
 
       this.window.on('closed', () => {

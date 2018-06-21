@@ -1,5 +1,5 @@
 import { ipcRenderer as ipc } from 'electron';
-import BargraphRenderer from '../../../shared/core/BargraphRenderer';
+import BargraphRenderer from '../../../shared/renderers/BargraphRenderer';
 import EventEmitter from 'events';
 
 const defaultMovuinoIP = '192.168.0.128';
@@ -34,7 +34,7 @@ class Movuino extends EventEmitter {
     this.$serialMenu = document.querySelector('#serialports-menu');
     this.$movuinoFound = document.querySelector('#movuino-found-label');
 
-    ipc.on('serialport', (e, ...args) => {
+    ipc.on('serial', (e, ...args) => {
       if (args[0] === 'ports') {
         const res = args[1];
 
@@ -53,18 +53,20 @@ class Movuino extends EventEmitter {
           opt.innerHTML = res[i].comName.split('/dev/tty.').join('');
           this.$serialMenu.appendChild(opt);
         }
+      } else if (args[0] === 'nodriverinstalled') {
+        // alert('It seems that the serial driver is missing on your machine. Would you like to <a>install</a> it ?');
       }
     });
 
-    ipc.send('serialport', 'refresh');
+    ipc.send('serial', 'refresh');
 
     this.$refresh.addEventListener('click', () => {
-      ipc.send('serialport', 'refresh');
+      ipc.send('serial', 'refresh');
       this.onMovuinoConnected(false);
     });
 
     this.$serialMenu.addEventListener('change', () => {
-      ipc.send('serialport', 'port', this.$serialMenu.selectedIndex);
+      ipc.send('serial', 'port', this.$serialMenu.selectedIndex);
       this.onMovuinoConnected(false);
     });
 

@@ -49,6 +49,11 @@ const config = {
 
   dist: {
 
+    drivers: {
+      downloadPageUel: 'https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers',
+      downloadUrl: 'https://www.silabs.com/documents/public/software/Mac_OSX_VCP_Driver.zip',
+    },
+
     //------------------------------ application -----------------------------//
 
     app: {

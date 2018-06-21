@@ -2,7 +2,7 @@
     This sketch is a Movuino firmware.
     It allows the Movuino to send data on a specific Wifi through an OSC protocol. (Open Sound Control)
 */
-
+// #include <WebSocket.h>
 #include "Wire.h"
 
 #include "Controller.h"

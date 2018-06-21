@@ -34,7 +34,6 @@ pathKeys.forEach((k) => {
   paths[k] = path.normalize(paths[k]);
 });
 
-
 //======================== FOLDER STRUCTURE HOLDERS ==========================//
 
 let sassFiles;

@@ -198,10 +198,60 @@ input::-webkit-inner-spin-button {
 div#main-wrapper {
   width: 100%;
   height: 100%;
-  position: absolute;
+  position: fixed;
   overflow-x: hidden;
   overflow-y: scroll;
   // margin-bottom: 10px;
+}
+
+div#lightbox {
+  z-index: 100;
+  display: none; //block;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  bottom: 0;
+  position: fixed;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  text-align: center;
+  color: #eee;
+  background-color: rgba(0, 0, 0, 0.75);
+  // cursor: default;
+  a {
+    color: #aaa;
+    font-weight: bold;
+    text-decoration: none;
+  }
+
+  div#lightbox-contents {
+    // margin-top: 100px;
+    position: relative;
+    top: 10%;
+    // transform: translateY(-50%);
+    // left: 50%;
+    // transform: translateX(-50%);
+    padding: 10px;
+    margin: 0 10%;
+    background-color: rgba(0, 0, 0, 0.5);
+    // display: inline-block;
+    // margin: 100px 100px;
+
+    div {
+      max-width: 150px;
+      margin: 0 auto;
+      padding: 0;
+      text-align: left;
+    }
+
+    ul {
+      list-style-type: none;
+    }
+  }
+}
+
+div#lightbox.on {
+  display: block;
 }
 
 div#main {
@@ -344,10 +394,12 @@ div.section-container div {
 }
 
 div.section-flex {
-  display: flex;
+  display: flex !important;
   padding: 0 !important;
+  algn-items: center !important;
+  // text-align: justify;
   /*flex-direction: column;*/
-  /*justify-content: center;*/
+  // justify-content: center;
   /*height: 100%;*/
 }
 
@@ -623,6 +675,59 @@ div#data-visualization {
 div#data-visualization-controls {
   width: 50%;
 }
+
+//* * * * * * * * * * * * * * * DATA RECORDER * * * * * * * * * * * * * * * * */
+
+div#record-data-container {
+  padding-left: 10px !important;
+  justify-content: center;
+
+  div.thin {
+    text-align: center;
+    vertical-align: middle;
+    width: 40px;
+    height: 40px;
+
+    button#record-data-btn {
+      width: 34px;
+      height: 34px;
+      border: 0;
+      padding: 10px;
+      margin: 3px;
+      border-radius: 34px;
+      background-color: #d00;
+    }
+
+    button#record-data-btn.on {
+      width: 24px;
+      height: 24px;
+      margin: 8px;
+      border-radius: 0px;
+      background-color: #000;
+    }
+  }
+
+  div#record-data-txt-container {
+    flex-grow: 3;
+    flex-shrink: 1;
+    flex-basis: auto;
+    display: inline !important;
+    overflow: hidden;
+    text-align: left;
+
+    div#record-data-txt {
+      line-height: 1.7em;
+      background-color: #dedede;
+      padding: 0px !important;
+      padding-left: 3px !important;
+      margin: 10px !important;
+      margin-left: 3px !important;
+    }
+  }
+
+}
+
+//* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 div#data-visualization-sensors {
   width: 50%;

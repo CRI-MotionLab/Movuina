@@ -3,6 +3,10 @@
 
 #include <EEPROM.h>
 
+// EEPROM is emulated on ESP8266, so it might be worth using SPIFFS instead !!!
+// (no performance gain or anything using eeprom here ...)
+// see : https://www.reddit.com/r/esp8266/comments/6fgo7f/file_system_vs_eeprom/
+
 #define MAX_STRING_SIZE 32
 
 // This class stores Movuino settings and is able
@@ -43,7 +47,7 @@ public:
     sendSerialSensors = true;
     sendOSCHeartBeat = false;
     sendSerialHeartBeat = true;
-    
+
     EEPROM.begin(512);
   }
 
