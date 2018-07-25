@@ -14,6 +14,7 @@ class RepetitionsRenderer extends Canvas2DRenderer {
 
   setData(energy, dynamicTrigThreshold) {
     if (!this.rendered) return;
+    if (!this._running) return;
     this.rendered = false;
 
     this.energy = energy / 120;
@@ -31,8 +32,8 @@ class RepetitionsRenderer extends Canvas2DRenderer {
 
     const ctx = this.$ctx;
     const c = this.$canvas;
-    const lineWidth = 10;
-
+    const lineWidth = 5;
+    const maxY = c.height - lineWidth;
 
     ctx.clearRect(0, 0, c.width, c.height);
 
@@ -43,6 +44,7 @@ class RepetitionsRenderer extends Canvas2DRenderer {
     ctx.fillRect(0, y, c.width, h);
 
     y = (1 - this.dynamicTrigThreshold) * c.height - lineWidth * 0.5;
+    y = y > maxY ? maxY : y;
     h = lineWidth;
 
     ctx.fillStyle = this.colors[1];

@@ -1,13 +1,13 @@
 {
-  "name": "Movuinode",
-  "version": "0.0.1",
+  "name": "Movuina",
+  "version": "0.0.2",
   "description": "hub application for movuino sensors and more",
   "main": "app/app/main.js",
   "scripts": {
     "version": "node bin/index.js version",
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
-    "rebuild": "./node_modules/.bin/electron-rebuild.cmd",
+    "rebuild": "./node_modules/.bin/electron-rebuild.cmd -o xmm-node",
     "test": "echo \"TODO: write some tests\" && exit 1"
   },
   "author": "Joseph Larralde",
@@ -21,17 +21,20 @@
     "express": "^4.16.2",
     "fs-extra": "^5.0.0",
     "lfo-motion": "github:ircam-rnd/lfo-motion",
+    "mano-js": "github:ircam-rnd/mano-js",
     "marked": "^0.3.17",
+    "movuino": "github:topela/movuino.js#master",
     "mustache": "^2.3.0",
-    "osc": "^2.2.0",
+    "osc": "^2.2.3",
     "serialport": "6.2.0",
     "serve-favicon": "^2.4.5",
     "uglify-js": "^3.3.14",
-    "waves-lfo": "1.1.6"
+    "waves-lfo": "1.1.6",
+    "xmm-node": "github:ircam-rnd/xmm-node"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
+    "babel-preset-env": "^1.7.0",
     "browserify": "^16.1.0",
     "electron": "^1.8.4",
     "electron-packager": "^12.0.0",

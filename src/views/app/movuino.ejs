@@ -16,10 +16,14 @@
     <div> <h2> Serial connection (USB) </h2> </div>
 
     <div id="serialports-menu-container">
-      <div> <span>
+      <div>
+      <!-- <span> -->
+        
+        <!--
         <div class="inline reset">
           <button id="refresh-serialports-menu"></button>
         </div>
+        -->
 
         <div class="menu-wrapper dark-blue inline reset">
           <select id="serialports-menu">
@@ -28,9 +32,10 @@
         </div>
 
         <label id="movuino-found-label" class="bad">
-          Movuino not found
+          Movuino not connected
         </label>
-      </span> </div>
+      <!-- </span> -->
+      </div>
     </div>
   </div>
 
@@ -94,6 +99,7 @@
           </div>
         </div>
 
+        <!--
         <div class="inline">
           <div> Input port </div>
           <input type="number" class="small-number" id="movuino-input-port">
@@ -103,11 +109,12 @@
           <div> Output port </div>
           <input type="number" class="small-number" id="movuino-output-port">
         </div>
-
+        -->
         <div class="inline">
           <div> Movuino OSC identifier </div>
           <input type="text" id="movuino-osc-identifier">
         </div>
+        <!-- -->
       </div>
 
       <!--
@@ -124,8 +131,8 @@
       </div>
       -->
 
-      <div id="update-movuino-settings">
-        <button id="update-movuino-settings-btn" class="blue-rounded">
+      <div id="refresh-movuino-wifi">
+        <button id="refresh-movuino-wifi-btn" class="blue-rounded">
           <!-- Update settings -->
           Refresh connection
         </button>

@@ -30,7 +30,7 @@ class AppMenu extends EventEmitter {
           {type: 'separator'},
           {
             id: 'toggle-osc-connections',
-            label: 'Toggle Show OSC Connections',
+            label: 'Show OSC Connections',
             type: 'checkbox',
             accelerator: 'CommandOrControl+C',
             //click: () => { callbacks.toggleOSCConnection(this.menu); },
@@ -56,38 +56,38 @@ class AppMenu extends EventEmitter {
           {role: 'close', accelerator: null}
         ]
       },
-      {
-        label: 'Devices',
-        submenu: [
-          {
-            id: 'add-movuino-device',
-            label: 'Add Movuino Device',
-            type: 'normal',
-            accelerator: 'CommandOrControl+T',
-            click: (item, BrowserWindow) => {
-              this.emit('device' ,'add');
-            }
-          },
-          {
-            id: 'remove-movuino-device',
-            label: 'Remove Movuino Device',
-            type: 'normal',
-            accelerator: 'CommandOrControl+W',
-            click: (item, BrowserWindow) => {
-              this.emit('device', 'removecurrent');
-            }
-          },
-          {
-            id: 'next-movuino-device',
-            label: 'Next Movuino Device',
-            type: 'normal',
-            accelerator: 'Control+Tab',
-            click: (item, BrowserWindow) => {
-              this.emit('device', 'next');
-            }
-          }
-        ]
-      },
+      // {
+      //   label: 'Devices',
+      //   submenu: [
+      //     {
+      //       id: 'add-movuino-device',
+      //       label: 'Add Movuino Device',
+      //       type: 'normal',
+      //       accelerator: 'CommandOrControl+T',
+      //       click: (item, BrowserWindow) => {
+      //         this.emit('device' ,'add');
+      //       }
+      //     },
+      //     {
+      //       id: 'remove-movuino-device',
+      //       label: 'Remove Movuino Device',
+      //       type: 'normal',
+      //       accelerator: 'CommandOrControl+W',
+      //       click: (item, BrowserWindow) => {
+      //         this.emit('device', 'removecurrent');
+      //       }
+      //     },
+      //     {
+      //       id: 'next-movuino-device',
+      //       label: 'Next Movuino Device',
+      //       type: 'normal',
+      //       accelerator: 'Control+Tab',
+      //       click: (item, BrowserWindow) => {
+      //         this.emit('device', 'next');
+      //       }
+      //     }
+      //   ]
+      // },
       {
         role: 'help',
         submenu: [
@@ -148,8 +148,10 @@ class AppMenu extends EventEmitter {
     return this.menuTemplate;
   }
 
-  setMenu(menu) {
-    this.menu = menu;
+  initMenu(menu) {
+    const item = menu.getMenuItemById('toggle-osc-connections');
+    item.checked = true;
+    this.emit('showOSCConnections', item.checked);
   }
 };
 

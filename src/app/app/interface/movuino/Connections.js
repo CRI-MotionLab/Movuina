@@ -18,6 +18,9 @@ class Connections {
   }
 
   init() {
+
+    //----------------------- get items to show / hide -----------------------//
+
     this.$items = [
       document.querySelector('#main'),
       document.querySelector('#movuino-osc-connections'),
@@ -34,6 +37,8 @@ class Connections {
       this.$items.push(messages.item(i));
     }
 
+    //------------------------ get display text areas ------------------------//
+
     this.messageDivs = {
       movIn: document.querySelector('#movuino-osc-flow-input-messages'),
       movOut: document.querySelector('#movuino-osc-flow-output-messages'),
@@ -42,29 +47,44 @@ class Connections {
       localOut2: document.querySelector('#local-osc-flow-output-messages-2'),
       localOut3: document.querySelector('#local-osc-flow-output-messages-3'),
     };
+  }
 
-    ipc.on('oscserver', (e, ...args) => {
-      if (!this.visible) return;
+  showOSCConnections(show) {
+    this.visible = show;
+    const className = 'show-osc-connections';
 
-      if (args[0] === 'display') {
-        const dst = args[1].target;
-        const now = Date.now();
-
-        if (this.messageRoutes.indexOf(dst) !== -1) {
-          if (now - this.messageTimers[dst] > this.OSCMessageDisplayInterval) {
-            this.messageTimers[dst] = now;
-            // console.log(this._messageToString(args.msg));
-            this.messageDivs[dst].innerHTML = this._messageToString(args[1].msg);
-          }
-        }
+    for (let i = 0; i < this.$items.length; i++) {
+      if (this.$items[i].classList.contains(className) && !show) {
+        this.$items[i].classList.remove(className);
+      } else if (!this.$items[i].classList.contains(className) && show) {
+        this.$items[i].classList.add(className);
       }
-    });
+    }
+  }
 
-    ipc.on('menu', (e, ...args) => {
-      if (args[0] === 'showOSCConnections') {
-        this._showOSCConnections(args[1]);
+  displayMessage(dst, message) {
+    // if (!this.visible) return;
+    const now = Date.now();
+    const msg = message.message;
+
+    if (dst === 'localOut') {
+      const suffix = msg.address.split('/').pop();
+      if (suffix === 'sensors') {
+        dst = 'localOut1';
+      } else if (suffix === 'repetitions') {
+        dst = 'localOut2';
+      } else if (suffix === 'gestures') {
+        dst = 'localOut3';
       }
-    });
+    }
+
+    if (this.messageRoutes.indexOf(dst) !== -1) {
+      if (now - this.messageTimers[dst] > this.OSCMessageDisplayInterval) {
+        this.messageTimers[dst] = now;
+        this.messageDivs[dst].innerHTML = this._messageToString(msg);
+      }
+    }
+
   }
 
   _messageToString(msg) {
@@ -73,11 +93,15 @@ class Connections {
 
     const suffix = msg.address.split('/').pop();
 
-    if (suffix === 'sensors' || suffix === 'filteredSensors') {
+    if (suffix === 'frame' || suffix === 'sensors') {
       for (let i = 0; i < 3; i++) {
         oscStr += `${msg.args[i * 3].toFixed(2)}`;
         oscStr += ` ${msg.args[i * 3 + 1].toFixed(2)}`;
         oscStr += ` ${msg.args[i * 3 + 2].toFixed(2)}<br>`;
+      }
+
+      if (suffix === 'frame') {
+        oscStr += `${msg.args[9]} ${msg.args[10]}`;
       }
     } else {
       for (let i = 0; i < msg.args.length; i++) {
@@ -92,19 +116,6 @@ class Connections {
     }
 
     return oscStr;
-  }
-
-  _showOSCConnections(show) {
-    this.visible = show;
-    const className = 'show-osc-connections';
-
-    for (let i = 0; i < this.$items.length; i++) {
-      if (this.$items[i].classList.contains(className) && !show) {
-        this.$items[i].classList.remove(className);
-      } else if (!this.$items[i].classList.contains(className) && show) {
-        this.$items[i].classList.add(className);
-      }
-    }
   }
 };
 

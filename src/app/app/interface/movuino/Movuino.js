@@ -1,216 +1,92 @@
+import EventEmitter from 'events';
 import { ipcRenderer as ipc } from 'electron';
 import BargraphRenderer from '../../../shared/renderers/BargraphRenderer';
-import EventEmitter from 'events';
-
-const defaultMovuinoIP = '192.168.0.128';
-
-const defaultMovuinoSettings = {
-  oscId: 'movuino',
-  ssid: 'my_network_ssid',
-  password: 'my_network_password',
-  hostIP: '192.168.0.100',
-  portIn: 9000,
-  portOut: 9001,
-  sendOSCSensors: true,
-  sendSerialSensors: true,
-};
 
 class Movuino extends EventEmitter {
   constructor() {
     super();
+
     const lightYellow = '#fff17a';
     const lightBlue = '#7cdde2';
     const lightRed = '#f45a54';
     this.fillStyles = [ lightYellow, lightBlue, lightRed ];
 
-    this.movuinoIP = defaultMovuinoIP;
-    this.movuinoSettings = defaultMovuinoSettings;
-    this.heartBeatTimeout = null;
+    this.serialPorts = null;
+    this.comName = null;
+    this.info = null; // could be an array to maintain a multi-movuino state
+
+    this.allowUpdateWiFiConnections = true;
     this.initialized = false;
   }
 
   init() {
-    this.$refresh = document.querySelector('#refresh-serialports-menu');
+
+    //---------------------------- serial menu -------------------------------//
+
     this.$serialMenu = document.querySelector('#serialports-menu');
     this.$movuinoFound = document.querySelector('#movuino-found-label');
 
-    ipc.on('serial', (e, ...args) => {
-      if (args[0] === 'ports') {
-        const res = args[1];
-
-        while (this.$serialMenu.firstChild) {
-          this.$serialMenu.removeChild(this.$serialMenu.firstChild);
-        }
-
-        var opt = document.createElement("option");
-        opt.value = -1;
-        opt.innerHTML = 'Available ports';
-        this.$serialMenu.appendChild(opt);
-
-        for (var i = 0; i < res.length; i++) {
-          opt = document.createElement("option");
-          opt.value = i;
-          opt.innerHTML = res[i].comName.split('/dev/tty.').join('');
-          this.$serialMenu.appendChild(opt);
-        }
-      } else if (args[0] === 'nodriverinstalled') {
-        // alert('It seems that the serial driver is missing on your machine. Would you like to <a>install</a> it ?');
-      }
-    });
-
-    ipc.send('serial', 'refresh');
-
-    this.$refresh.addEventListener('click', () => {
-      ipc.send('serial', 'refresh');
-      this.onMovuinoConnected(false);
-    });
-
     this.$serialMenu.addEventListener('change', () => {
-      ipc.send('serial', 'port', this.$serialMenu.selectedIndex);
-      this.onMovuinoConnected(false);
+      const value = this.$serialMenu.options[this.$serialMenu.selectedIndex].value;
+      this.comName = value === "noPortConnected" ? null : value;
+      this.emit('serialPort', this.comName);
     });
 
-    ipc.on('movuino', (e, ...args) => {
-      if (args[0] === 'movuino') {
-        this.onMovuinoConnected(true);
-        ipc.send('oscserver', 'restartMovuinoServer', {});
-      }
-    });
+    //------------------------------------------------------------------------//
 
-    this.$oscId = document.querySelector('#movuino-osc-identifier');
     this.$ssid = document.querySelector('#network-ssid');
     this.$password = document.querySelector('#network-password');
     this.$ip1 = document.querySelector('#host-ip-1');
     this.$ip2 = document.querySelector('#host-ip-2');
     this.$ip3 = document.querySelector('#host-ip-3');
     this.$ip4 = document.querySelector('#host-ip-4');
+    this.$hostIP = [ this.$ip1, this.$ip2, this.$ip3, this.$ip4 ];
+
+    //----------------------------- get my IP --------------------------------//
 
     this.$getMyIP = document.querySelector('#get-my-ip-btn');
 
-    this.$portIn = document.querySelector('#movuino-input-port');
-    this.$portOut = document.querySelector('#movuino-output-port');
+    this.$getMyIP.addEventListener('click', (e) => {
+      this.emit('controller', 'getMyIP');
+    });
 
-    this.$sendOSCSensors = document.querySelector('#send-osc-sensors');
-    this.$sendSerialSensors = document.querySelector('#send-serial-sensors');
+    //------------------------------------------------------------------------//
+    // TODO : maybe replace this by a dynamic select menu with identifiers obtained from wifi
+    this.$movuinoId = document.querySelector('#movuino-osc-identifier');
 
-    this.$movuinoSettings = [
-      this.$oscId, this.$ssid, this.$password,
-      this.$ip1, this.$ip2, this.$ip3, this.$ip4,
-      this.$portIn, this.$portOut,
-    ];
+    //------------------------------------------------------------------------//
 
     this.$movip1 = document.querySelector('#movuino-ip-1');
     this.$movip2 = document.querySelector('#movuino-ip-2');
     this.$movip3 = document.querySelector('#movuino-ip-3');
     this.$movip4 = document.querySelector('#movuino-ip-4');
+    this.$movuinoIP = [ this.$movip1, this.$movip2, this.$movip3, this.$movip4 ];
 
-    this.$updateSettings = document.querySelector('#update-movuino-settings-btn');
+    this.$refreshWiFi = document.querySelector('#refresh-movuino-wifi-btn');
+
+    this.$refreshWiFi.addEventListener('click', (e) => {
+      // a timeout of 1000 is empirically good to prevent info and wifiConnections to interfere
+      this.allowUpdateWiFiConnections = false;
+      setTimeout(() => { this.allowUpdateWiFiConnections = true; }, 1000);
+
+      this.emit('devices', 'osc', {
+        medium: 'serial',
+        message: {
+          address: '/wifi/set',
+          args: [
+            { type: 's', value: this.info.ssid },
+            { type: 's', value: this.info.password},
+            { type: 's', value: this.info.hostIP},
+          ]
+        }
+      });
+    });
+
     this.$wiFiCircle = document.querySelector('#movuino-connected-circle');
     this.$wiFiStatus = document.querySelector('#movuino-connected-label');
-    // this.$wiFiOnOff = document.querySelector('#movuino-wifi-on-off-btn');
 
-    // this.$getMovuinoIP = document.querySelector('#get-movuino-ip');
 
-    this.onMovuinoConnected(false);
-
-    ipc.on('renderer', (e, ...args) => {
-      if (args[0] === 'getmyip') {
-        const hostIP = args[1].split('.');
-        this.$ip1.value = parseInt(hostIP[0]);
-        this.$ip2.value = parseInt(hostIP[1]);
-        this.$ip3.value = parseInt(hostIP[2]);
-        this.$ip4.value = parseInt(hostIP[3]);
-      }
-    });
-
-    this.$getMyIP.addEventListener('click', (e) => {
-      ipc.send('renderer', 'getmyip');
-    });
-
-    ipc.on('movuino', (e, ...args) => {
-      if (args[0] === 'settings') {
-        const a = args[1];
-        this.$oscId.value = a[0];
-        this.$ssid.value = a[1];
-        this.$password.value = a[2];
-
-        const hostIP = a[3].split('.');
-        this.$ip1.value = parseInt(hostIP[0]);
-        this.$ip2.value = parseInt(hostIP[1]);
-        this.$ip3.value = parseInt(hostIP[2]);
-        this.$ip4.value = parseInt(hostIP[3]);
-
-        this.$portIn.value = parseInt(a[4]);
-        this.$portOut.value = parseInt(a[5]);
-
-        // this.$sendOSCSensors.checked = parseInt(a[6]) === 1;
-        // this.$sendSerialSensors.checked = parseInt(a[7]) === 1;
-
-        this.updateMovuinoSettings();
-      } else if (args[0] === 'ip') {
-        const arg = args[1][0];
-
-        const movuinoIP = arg.split('.');
-        this.$movip1.value = parseInt(movuinoIP[0]);
-        this.$movip2.value = parseInt(movuinoIP[1]);
-        this.$movip3.value = parseInt(movuinoIP[2]);
-        this.$movip4.value = parseInt(movuinoIP[3]);
-
-        this.movuinoIP = arg;
-        this.updateMovuinoSettings(true);
-      } else if (args[0] === 'heartbeat') {
-        // if ((args[1][0] === '1' && !this.$wiFiOnOff.checked) ||
-        //     (args[1][0] === '0' && this.$wiFiOnOff.checked)) {
-        //   this.$wiFiOnOff.checked = !this.$wiFiOnOff.checked;
-        this.setWiFiState(args[1][0] === '1' ? 'connected' : 'disconnected');
-
-        if (this.movuinoIP !== args[1][1]) {
-
-          const movuinoIP = args[1][1].split('.');
-          this.$movip1.value = parseInt(movuinoIP[0]);
-          this.$movip2.value = parseInt(movuinoIP[1]);
-          this.$movip3.value = parseInt(movuinoIP[2]);
-          this.$movip4.value = parseInt(movuinoIP[3]);
-
-          this.movuinoIP = args[1][1];
-          this.updateMovuinoSettings(true);
-        }
-
-        // CALL THIS ON EACH HEART BEAT :
-
-        if (this.heartBeatTimeout !== null) {
-          clearTimeout(this.heartBeatTimeout);
-        }
-
-        // this.heartBeatTimeout = setTimeout((() => {
-        //   ipc.send('serialport', 'refresh');
-        //   this.onMovuinoConnected(false);
-        // }).bind(this), 1200);
-      } else if (args[0] === 'wifi') {
-        this.setWiFiState(args[1][0]);
-      }
-    });
-
-    this.$updateSettings.addEventListener('click', (e) => {
-      this.updateMovuinoSettings();
-
-      ipc.send('movuino', 'settings!', [
-        this.movuinoSettings.oscId,
-        this.movuinoSettings.ssid,
-        this.movuinoSettings.password,
-        this.movuinoSettings.hostIP,
-        `${this.movuinoSettings.portIn}`,
-        `${this.movuinoSettings.portOut}`,
-        this.movuinoSettings.sendOSCSensors ? '1' : '0',
-        this.movuinoSettings.sendSerialSensors ? '1' : '0',
-      ]);
-    });
-
-    // this.$wiFiOnOff.addEventListener('change', (e) => {
-    //   ipc.send('movuino', 'wifi!', this.$wiFiOnOff.checked ? '1' : '0');
-    // });
-
-    // prepare canvas for drawing
+    //-------------------------- BARGRAPH RENDERERS --------------------------//
 
     this.$sensorBargraphs = [
       document.querySelector('#movuino-accelerometers'),
@@ -226,12 +102,81 @@ class Movuino extends EventEmitter {
       this.bargraphRenderers[i].start();
     }
 
-    ipc.on('movuino', (e, ...args) => {
-      if (args[0] === 'sensors') {
-        const a = args[1];
-        const acc = [ parseFloat(a[0]), parseFloat(a[1]), parseFloat(a[2]) ];
-        const gyr = [ parseFloat(a[3]), parseFloat(a[4]), parseFloat(a[5]) ];
-        const mag = [ parseFloat(a[6]), parseFloat(a[7]), parseFloat(a[8]) ];
+    this.initialized = true;
+  }
+
+  updateSerialPorts(serialPorts) {
+    this.serialPorts = serialPorts || [];
+
+    while (this.$serialMenu.firstChild) {
+      this.$serialMenu.removeChild(this.$serialMenu.firstChild);
+    }
+
+    var opt = document.createElement("option");
+    opt.value = "noPortConnected";
+    opt.innerHTML = 'Available ports';
+    this.$serialMenu.appendChild(opt);
+
+    let portStillExists = false;
+
+    for (var i = 0; i < this.serialPorts.length; i++) {
+      opt = document.createElement("option");
+
+      if (this.serialPorts[i].comName === this.comName) {
+        opt.selected = portStillExists = true;
+      }
+
+      opt.value = serialPorts[i].comName;
+      const name = serialPorts[i].comName.split('/dev/tty.').join('');
+      opt.innerHTML = name;
+
+      this.$serialMenu.appendChild(opt);
+    }
+
+    if (!portStillExists) {
+      this.comName = null;
+      this.emit('serialPort', null);
+    }
+  }
+
+  updateWiFiConnections(wifiConnections) {
+    if (this.allowUpdateWiFiConnections) {
+      const state = this.info !== null
+                  ? (wifiConnections.indexOf(this.info.id) === -1 ? 0 : 1)
+                  : 0;
+
+      // this.info.wifiState = state;
+      // console.log('movuino ' + (state === 1 ? 'dis' : '') + 'connected');
+      // this.info.wifiState = state;
+      this.setWiFiState(state);
+    }
+  }
+
+  updateInfo(movuinoInfo = null) {
+    this.info = movuinoInfo.info || this.info; // (we could also get movuinoInfo.device, which is the device list id)
+    console.log(JSON.stringify(this.info, null, 2));
+
+    this.setSerialState(this.info.serialPortReady);
+
+    this.$ssid.value = this.info.ssid;
+    this.$password.value = this.info.password;
+    this.setHostIP(this.info.hostIP);
+    this.$movuinoId.value = this.info.id;
+
+    this.setWiFiState(this.info.wifiState);
+    this.setMovuinoIP(this.info.movuinoIP);
+  }
+
+  processOSCMessage(message) {
+    if (this.info !== null && message.id === this.info.id &&
+        message.from === 'movuino' && message.medium === 'serial') {
+      const msg = message.message;
+
+      if (msg.address === '/frame') {
+        const a = msg.args;
+        const acc = [ a[0], a[1], a[2] ];
+        const gyr = [ a[3], a[4], a[5] ];
+        const mag = [ a[6], a[7], a[8] ];
         for (let i = 0; i < 3; ++i) {
           acc[i] = acc[i] * 0.5 + 0.5;
           gyr[i] = gyr[i] * 0.5 + 0.5;
@@ -239,13 +184,22 @@ class Movuino extends EventEmitter {
         }
         this.setBargraphData([ acc, gyr, mag ]);
       }
-    });
+    }
+  }
 
-    // this.$getMovuinoIP.addEventListener('click', () => {
-    //   ipc.send('movuino', 'address?');
-    // });
+  //==========================================================================//
 
-    this.initialized = true;
+  setSerialState(connected) {
+    this.$movuinoFound.className = connected ? 'good' : 'bad';
+    this.$movuinoFound.innerHTML = connected ? 'Movuino connected' : 'Movuino not connected';    
+  }
+
+  setBargraphData(data) { // set from serial
+    if (this.initialized) {
+      for (let i = 0; i < 3; i++) {
+        this.bargraphRenderers[i].setData(data[i]);
+      }
+    }
   }
 
   setWiFiState(state) {
@@ -265,17 +219,17 @@ class Movuino extends EventEmitter {
     }
 
     switch (state) {
-      case 'disconnected':
+      case 0:
         this.$wiFiCircle.classList.add('bad');
         this.$wiFiStatus.innerHTML = 'Movuino disconnected';
         this.$wiFiStatus.classList.add('bad');
         break;
-      case 'connecting':
+      case 2:
         this.$wiFiCircle.classList.add('neutral');
         this.$wiFiStatus.innerHTML = 'Connecting movuino ...';
         this.$wiFiStatus.classList.add('neutral');
         break;
-      case 'connected':
+      case 1:
         this.$wiFiCircle.classList.add('good');
         this.$wiFiStatus.innerHTML = 'Movuino connected';
         this.$wiFiStatus.classList.add('good');
@@ -283,76 +237,25 @@ class Movuino extends EventEmitter {
       default:
         break;
     }
+
+    this.emit('connected', state === 1);
   }
 
-  onMovuinoConnected(connected) {
-    this.$movuinoFound.className = connected ? 'good' : 'bad';
-    this.$movuinoFound.innerHTML = connected ? 'Movuino connected' : 'Movuino not connected';
-
-    for (let i = 0; i < this.$movuinoSettings.length; i++) {
-      this.$movuinoSettings[i].value = '';
-      this.$movuinoSettings[i].disabled = !connected;
-    }
-
-    this.$getMyIP.disabled = !connected;
-    this.$updateSettings.disabled = !connected;
-
-    // [ this.$sendOSCSensors, this.$sendSerialSensors, this.$wiFiOnOff ].forEach((item) => {
-    //   item.checked = false;
-    //   item.disabled = !connected;
-    // });
-
-    if (!connected) {
-      ipc.send('oscserver', 'stopMovuinoServer');
-    }
-
-    this.emit('connected', connected);
+  setHostIP(ip) {
+    this._setIP(this.$hostIP, ip);
   }
 
-  updateMovuinoSettings(forceUpdate = false) {
-    const oscId = this.$oscId.value;
-    const ssid = this.$ssid.value;
-    const password = this.$password.value;
-    const hostIP = `${this.$ip1.value}.${this.$ip2.value}.${this.$ip3.value}.${this.$ip4.value}`;
-    const portIn = parseInt(this.$portIn.value);
-    const portOut = parseInt(this.$portOut.value);
-    // const sendOSCSensors = this.$sendOSCSensors.checked;
-    // const sendSerialSensors = this.$sendSerialSensors.checked;
-    // console.log(ssid + ' ' + password + ' ' + ip);
-
-    if (forceUpdate ||
-        this.movuinoSettings.hostIP !== hostIP ||
-        this.movuinoSettings.portIn !== portIn ||
-        this.movuinoSettings.portOut !== portOut) {
-      ipc.send('oscserver', 'restartMovuinoServer', {
-        localAddress: hostIP,
-        localPort: portOut,
-        remoteAddress: this.movuinoIP,
-        remotePort: portIn
-      });
-    }
-
-    if (this.movuinoSettings.oscId !== oscId) {
-      ipc.send('oscserver', 'oscid', oscId);
-    }
-
-    this.movuinoSettings = {
-      oscId: oscId,
-      ssid: ssid,
-      password: password,
-      hostIP: hostIP,
-      portIn: portIn,
-      portOut: portOut,
-      sendOSCSensors: true, // sendOSCSensors,
-      sendSerialSensors: true, // sendSerialSensors,
-    };
+  setMovuinoIP(ip) {
+    this._setIP(this.$movuinoIP, ip);
   }
 
-  setBargraphData(data) {
-    if (this.initialized) {
-      for (let i = 0; i < 3; i++) {
-        this.bargraphRenderers[i].setData(data[i]);
-      }
+  _setIP($ip, ip) {
+    const ipArr = ip.split('.');
+    if (ipArr.length === 4) {
+      $ip[0].value = parseInt(ipArr[0]);      
+      $ip[1].value = parseInt(ipArr[1]);      
+      $ip[2].value = parseInt(ipArr[2]);      
+      $ip[3].value = parseInt(ipArr[3]);      
     }
   }
 };

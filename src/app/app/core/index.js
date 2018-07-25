@@ -1,13 +1,19 @@
 import AppMenu from './AppMenu';
-import OSCServer from './OSCServer';
-import Renderer from './Renderer';
 import Serial from './Serial';
-import WebServer from './WebServer';
+import Movuino from './Movuino';
+import Devices from './Devices';
+import LocalServer from './LocalServer';
+import MachineLearning from './MachineLearning';
+import ViewController from './ViewController';
+import * as util from './util';
 
 export {
   AppMenu,
-  OSCServer,
-  Renderer,
   Serial,
-  WebServer,
+  Movuino,
+  Devices,
+  LocalServer,
+  MachineLearning,
+  ViewController,
+  util,
 };

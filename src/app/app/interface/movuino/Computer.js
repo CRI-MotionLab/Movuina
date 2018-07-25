@@ -1,21 +1,32 @@
 import { ipcRenderer as ipc } from 'electron';
+import EventEmitter from 'events';
+
 import WaveformRenderer from '../../../shared/renderers/WaveformRenderer';
 import RepetitionsRenderer from '../../../shared/renderers/RepetitionsRenderer';
+import GestureRecorderRenderer from '../../../shared/renderers/GestureRecorderRenderer';
+import GestureFollowerRenderer from '../../../shared/renderers/GestureFollowerRenderer';
+
 import * as lfo from 'waves-lfo/client';
-// import * as lfoMotion from 'lfo-motion';
-import EventEmitter from 'events';
+
 import Resampler from '../../../shared/lfos/Resampler';
 import Repetitions from '../../../shared/lfos/Repetitions';
+import Intensity from '../../../shared/lfos/Intensity';
+import StillAutoTrigger from '../../../shared/lfos/StillAutoTrigger';
 import GestureRecognition from '../../../shared/lfos/GestureRecognition';
+import { colors, getMovuinoIdAndOSCSuffixFromAddress } from '../../core/util';
 
 class Computer extends EventEmitter {
   constructor() {
     super();
-    const lightYellow = '#fff17a';
-    const lightBlue = '#7cdde2';
-    const lightRed = '#f45a54';
+
+    this.info = null;
+
+    // const lightYellow = '#fff17a';
+    // const lightBlue = '#7cdde2';
+    // const lightRed = '#f45a54';
+
     this.lightGrey = '#555';
-    this.fillStyles = [ lightYellow, lightBlue, lightRed ];
+    this.fillStyles = colors; // [ lightYellow, lightBlue, lightRed ];
     this.initialized = false;
 
     this.inputPeriod = 5
@@ -32,13 +43,18 @@ class Computer extends EventEmitter {
     this.onResamplingFrequencySliderValueChanged = this.onResamplingFrequencySliderValueChanged.bind(this);
     this.onFilterSizeSliderValueChanged = this.onFilterSizeSliderValueChanged.bind(this);
     this.onRecordDataBtnClick = this.onRecordDataBtnClick.bind(this);
+    this.onGestureRecBtnStateChanged = this.onGestureRecBtnStateChanged.bind(this);
+    this.onTrainingSetChanged = this.onTrainingSetChanged.bind(this);
 
     this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
     this.displayBridgeCallback = this.displayBridgeCallback.bind(this);
     this.rawBridgeCallback = this.rawBridgeCallback.bind(this);
     this.processRecordedData = this.processRecordedData.bind(this);
     this.repetitionsBridgeCallback = this.repetitionsBridgeCallback.bind(this);
+    this.stillAutoTriggerBridgeCallback = this.stillAutoTriggerBridgeCallback.bind(this);
     this.gestureRecognitionBridgeCallback = this.gestureRecognitionBridgeCallback.bind(this);
+
+    this.gestureIndex = null;
 
     this.movuinoConnected = false;
 
@@ -59,7 +75,7 @@ class Computer extends EventEmitter {
     });
 
     this.displayResampler = new Resampler({
-      resamplingFrequency: 25,
+      resamplingFrequency: 20,
     });
     this.displayBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.displayBridgeCallback(frame); },
@@ -95,7 +111,22 @@ class Computer extends EventEmitter {
       processFrame: (frame) => { this.repetitionsBridgeCallback(frame); },
     });
 
-    this.gestureRecognition = new GestureRecognition();
+
+    this.intensity = new Intensity({
+      feedback: 0.7,
+      gain: 0.5,
+    });
+    this.intensitySelect = new lfo.operator.Select({ index: 0 });
+    this.intensityMultiplier = new lfo.operator.Multiplier({ factor: 1000 });
+    this.stillAutoTrigger = new StillAutoTrigger({
+      onThreshold: 0.2, offThreshold: 0.02, offDelay: 0.1,
+    });
+    this.stillAutoTriggerBridge = new lfo.sink.Bridge({
+      processFrame: (frame) => { this.stillAutoTriggerBridgeCallback(frame) },
+    });
+
+    this.gestureRecognitionOnOff = new lfo.operator.OnOff({ state: 'off' });
+    this.gestureRecognition = new GestureRecognition(this.onTrainingSetChanged);
     this.gestureRecognitionBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.gestureRecognitionBridgeCallback(frame); },
     });
@@ -105,9 +136,9 @@ class Computer extends EventEmitter {
     this.eventIn.connect(this.resampler);
     this.resampler.connect(this.mvAvrg);
 
-    this.mvAvrg.connect(this.displayResampler);
-    this.displayResampler.connect(this.displayBridge);
-    // this.mvAvrg.connect(this.displayBridge);
+    // this.mvAvrg.connect(this.displayResampler);
+    // this.displayResampler.connect(this.displayBridge);
+    this.mvAvrg.connect(this.displayBridge);
 
     this.mvAvrg.connect(this.rawBridge);
     this.mvAvrg.connect(this.rawRecorder);
@@ -133,9 +164,18 @@ class Computer extends EventEmitter {
 
     // gesture recognition
 
-    this.mvAvrg.connect(this.gestureRecognition);
+    this.mvAvrg.connect(this.intensity);
+    this.intensity.connect(this.intensitySelect);
+    this.intensitySelect.connect(this.intensityMultiplier);
+    this.intensityMultiplier.connect(this.stillAutoTrigger);
+    this.stillAutoTrigger.connect(this.stillAutoTriggerBridge);
+
+    this.filteredAccSelector.connect(this.gestureRecognitionOnOff);
+    this.gestureRecognitionOnOff.connect(this.gestureRecognition);
     this.gestureRecognition.connect(this.gestureRecognitionBridge);
   }
+
+  //============================= INIT FUNCTION ==============================//
 
   init() {
     this.$vibroOnOff = document.querySelector('#movuino-interaction-vibrator-on-off');
@@ -145,15 +185,20 @@ class Computer extends EventEmitter {
     this.$vibroPulseTrigBtn = document.querySelector('#movuino-interaction-pulse-trig-btn');
 
     this.$vibroOnOff.addEventListener('click', () => {
+      if (this.info === null) return;
+
       const on = this.$vibroOnOff.classList.toggle('on');
+      const address = `/movuino/${this.info.id}/vibroNow`;
       if (on) {
-        this.onVibroNow([ 1 ]);
+        this.onVibroNow({ address: address, args: [ 1 ] });
       } else {
-        this.onVibroNow([ 0 ]);
+        this.onVibroNow({ address: address, args: [ 0 ] });
       }
     });
 
     this.$vibroPulseTrigBtn.addEventListener('click', () => {
+      if (this.info === null) return;
+
       const onDur = parseInt(this.$vibroPulseOnDuration.value);
       const offDur = parseInt(this.$vibroPulseOffDuration.value);
       const nbRepetitions = parseInt(this.$vibroPulseNbRepetitions.value);
@@ -164,7 +209,10 @@ class Computer extends EventEmitter {
         isNaN(nbRepetitions) ? 0 : nbRepetitions,
       ];
 
-      this.onVibroPulse(data);
+      this.onVibroPulse({
+        address: `/movuino/${this.info.id}/vibroPulse`,
+        args: data,
+      });
     });
 
     // DATA VISUALIZATION :
@@ -198,84 +246,8 @@ class Computer extends EventEmitter {
     for (let i = 0; i < 3; i++) {
       const wf = this.$sensorWaveforms[i];
       this.waveformRenderers.push(new WaveformRenderer(wf, this.fillStyles));
-      this.waveformRenderers[i].start();
+      // this.waveformRenderers[i].start();
     }
-
-    // data analysis / repetitions section
-
-    this.$repetitionsCanvasTrigs = [
-      document.querySelector('#movuino-accelerometer-repetitions-canvas'),
-      document.querySelector('#movuino-gyroscope-repetitions-canvas'),
-      document.querySelector('#movuino-magnetometer-repetitions-canvas'),
-    ];
-
-    this.$repetitionsBtnTrigs = [
-      document.querySelector('#movuino-accelerometer-repetitions-btn'),
-      document.querySelector('#movuino-gyroscope-repetitions-btn'),
-      document.querySelector('#movuino-magnetometer-repetitions-btn'),
-    ];
-
-    this.repetitionsRenderers = [];
-
-    for (let i = 0; i < 3; i++) {
-      const rep = this.$repetitionsCanvasTrigs[i];
-      this.repetitionsRenderers.push(new RepetitionsRenderer(rep, [ this.fillStyles[i], this.lightGrey ]));
-      this.repetitionsRenderers[i].start();
-    }
-
-    ipc.on('oscserver', (e, ...args) => {
-      const cmd = args[0];
-      const data = args[1];
-
-      if (cmd === 'control') {
-        if (data.target === 'sensors') {
-          this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-
-          for (let i = 0; i < Math.min(data.msg.args.length, 9); i++) {
-            this.sensorsData[i] = data.msg.args[i];
-          }
-
-          this.eventIn.process(0, this.sensorsData);
-        } else if (data.target === 'vibroNow') {
-          if (data.msg.args[0] === 1) {
-            if (!this.$vibroOnOff.classList.contains('on')) {
-              this.$vibroOnOff.classList.add('on');
-            }
-          } else if (data.msg.args[0] === 0) {
-            if (this.$vibroOnOff.classList.contains('on')) {
-              this.$vibroOnOff.classList.remove('on');
-            }
-          }
-
-          this.onVibroNow(data.msg.args);
-        } else if (data.target === 'vibroPulse') {
-          this.$vibroPulseOnDuration.value = data.msg.args[0];
-          this.$vibroPulseOffDuration.value = data.msg.args[1];
-          this.$vibroPulseNbRepetitions.value = data.msg.args[2];
-
-          this.$vibroPulseTrigBtn.classList.add('on');
-          setTimeout(() => {
-            this.$vibroPulseTrigBtn.classList.remove('on');
-          }, 100);
-
-          this.onVibroPulse(data.msg.args);
-        }
-      }
-    });
-
-    ipc.on('menu', (e, ...args) => {
-      if (args[0] === 'showOSCConnections') {
-        for (let i = 0; i < 3; i++) {
-          this.waveformRenderers[i].setUpdateDimensionsOnRender(true);
-        }
-
-        setTimeout((() => {
-          for (let i = 0; i < 3; i++) {
-            this.waveformRenderers[i].setUpdateDimensionsOnRender(false);
-          }
-        }).bind(this), 500);
-      }
-    });
 
     this.$zoom = document.querySelector('#zoom-slider');
     this.$zoom.addEventListener('input', () => {
@@ -305,7 +277,8 @@ class Computer extends EventEmitter {
     this.$resamplingFrequency.addEventListener('input', () => {
       this.onResamplingFrequencySliderValueChanged();
     });
-    this.$resamplingFrequency.value = 50;
+    this.$resamplingFrequency.value = 48; // will map to 50 Hz in the callback
+    this.$resamplingFrequencyValue = document.querySelector('#resampling-frequency-value');
     this.onResamplingFrequencySliderValueChanged();
 
     this.$filterSize = document.querySelector('#filter-size-slider');
@@ -313,9 +286,10 @@ class Computer extends EventEmitter {
       this.onFilterSizeSliderValueChanged();
     });
     this.$filterSize.value = 0;
+    this.$filterSizeValue = document.querySelector('#filter-size-value');
     this.onFilterSizeSliderValueChanged();
 
-    //============== RECORDER ==============//
+    //=========================== DATA RECORDER ==============================//
 
     this.$recordDataBtn = document.querySelector('#record-data-btn');
     this.$recordDataBtn.addEventListener('click', () => {
@@ -330,26 +304,174 @@ class Computer extends EventEmitter {
       }
     };
 
+    //============================ REPETITIONS ===============================//
+
+    this.$repetitionsCanvasTrigs = [
+      document.querySelector('#movuino-accelerometer-repetitions-canvas'),
+      document.querySelector('#movuino-gyroscope-repetitions-canvas'),
+      document.querySelector('#movuino-magnetometer-repetitions-canvas'),
+    ];
+
+    this.$repetitionsBtnTrigs = [
+      document.querySelector('#movuino-accelerometer-repetitions-btn'),
+      document.querySelector('#movuino-gyroscope-repetitions-btn'),
+      document.querySelector('#movuino-magnetometer-repetitions-btn'),
+    ];
+
+    this.repetitionsRenderers = [];
+
+    for (let i = 0; i < 3; i++) {
+      const rep = this.$repetitionsCanvasTrigs[i];
+      this.repetitionsRenderers.push(new RepetitionsRenderer(rep, [ this.fillStyles[i], this.lightGrey ]));
+      // this.repetitionsRenderers[i].start();
+    }
+
+    //========================== GESTURE RECOGNITION =========================//
+
+    this.$gestureRecBtns = [
+      document.querySelector('#gesture-1-rec-btn'),
+      document.querySelector('#gesture-2-rec-btn'),
+      document.querySelector('#gesture-3-rec-btn')
+    ];
+
+    for (let i = 0; i < this.$gestureRecBtns.length; i++) {
+      const btn = this.$gestureRecBtns[i];
+
+      btn.addEventListener('click', () => {
+        for (let j = 0; j < this.$gestureRecBtns.length; j++) {
+          if (i !== j) {
+            const b = this.$gestureRecBtns[j];
+            if (b.classList.contains('armed')) {
+              b.classList.remove('armed');
+              this.onGestureRecBtnStateChanged(j, 'off');
+            } else if (b.classList.contains('recording')) {
+              b.classList.remove('recording');
+              this.onGestureRecBtnStateChanged(j, 'off');
+            }
+          }
+        }
+
+        if (btn.classList.contains('armed')) {
+          btn.classList.remove('armed');
+          this.onGestureRecBtnStateChanged(i, 'off');
+        } else if (btn.classList.contains('recording')) {
+          btn.classList.remove('recording');
+          this.onGestureRecBtnStateChanged(i, 'off');
+        } else {
+          btn.classList.add('armed');
+          this.onGestureRecBtnStateChanged(i, 'armed');
+        }
+      });
+    }
+
+    this.$gestureRecCanvas = document.querySelector('#gesture-rec-display-canvas');
+    this.gestureRecRenderer = new GestureRecorderRenderer(this.$gestureRecCanvas, this.fillStyles);
+
+    this.$gestureClearBtn = document.querySelector('#gesture-clear-btn');
+    this.$gestureClearBtn.addEventListener('click', () => {
+      this.gestureRecognition.clear();
+    });
+
+    this.$gestureFollowCanvas = [
+      document.querySelector('#gesture-1-follow-canvas'),
+      document.querySelector('#gesture-2-follow-canvas'),
+      document.querySelector('#gesture-3-follow-canvas'),
+    ];
+
+    this.gestureFollowRenderers = [];
+
+    for (let i = 0; i < 3; i++) {
+      const gf = this.$gestureFollowCanvas[i];
+      const gfRenderer = new GestureFollowerRenderer(gf, this.fillStyles)
+      this.gestureFollowRenderers.push(gfRenderer);
+      // this.gestureFollowRenderers[i].start();
+    }
+
+    this.setMovuinoConnected(true);
+    this.setMovuinoConnected(false);
     this.initialized = true;
   }
 
-  onVibroNow(args) {
-    ipc.send('oscserver', 'sendOSC', {
-      target: 'movuino',
-      msg: {
-        address: '/vibroNow',
-        args: args,
-      },
+  //-------------------------- END OF INIT FUNCTION --------------------------//
+
+  updateInfo(movuinoInfo) {
+    this.info = movuinoInfo.info;
+    // this.setMovuinoConnected(this.info.udpPortReady);
+  }
+
+  processOSCMessage(message) {
+    if (this.info === null) return;
+
+    const msg = message.message;
+    const parts = getMovuinoIdAndOSCSuffixFromAddress(msg.address);
+
+    if (parts === null) return;
+    if (parts.id !== this.info.id) return;
+
+    switch (parts.suffix) {
+      case '/frame':
+        this.sensorsData = [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
+
+        for (let i = 0; i < Math.min(msg.args.length, 9); i++) {
+          this.sensorsData[i] = msg.args[i];
+        }
+
+        this.eventIn.process(0, this.sensorsData);
+        break;
+      case '/vibroNow':
+        if (msg.args[0] === 1) {
+          if (!this.$vibroOnOff.classList.contains('on')) {
+            this.$vibroOnOff.classList.add('on');
+          }
+        } else if (msg.args[0] === 0) {
+          if (this.$vibroOnOff.classList.contains('on')) {
+            this.$vibroOnOff.classList.remove('on');
+          }
+        }
+
+        this.onVibroNow(msg);
+        break;
+      case '/vibroPulse':
+          this.$vibroPulseOnDuration.value = msg.args[0];
+          this.$vibroPulseOffDuration.value = msg.args[1];
+          this.$vibroPulseNbRepetitions.value = msg.args[2];
+
+          this.$vibroPulseTrigBtn.classList.add('on');
+          setTimeout(() => {
+            this.$vibroPulseTrigBtn.classList.remove('on');
+          }, 100);
+
+          this.onVibroPulse(msg);
+        break;
+      default:
+        break;
+    }
+  }
+
+  // this is called on CSS transition when showing / hiding connections
+  setUpdateWaveformDimensionsDuring(duration) {
+    for (let i = 0; i < 3; i++) {
+      this.waveformRenderers[i].setUpdateDimensionsOnRender(true);
+    }
+
+    setTimeout((() => {
+      for (let i = 0; i < 3; i++) {
+        this.waveformRenderers[i].setUpdateDimensionsOnRender(false);
+      }
+    }).bind(this), duration);
+  }
+
+  onVibroNow(message) {
+    this.emit('devices', 'osc', {
+      medium: 'wifi',
+      message: message
     });
   }
 
-  onVibroPulse(args) {
-    ipc.send('oscserver', 'sendOSC', {
-      target: 'movuino',
-      msg: {
-        address: '/vibroPulse',
-        args: args,
-      },
+  onVibroPulse(message) {
+    this.emit('devices', 'osc', {
+      medium: 'wifi',
+      message: message
     });
   }
 
@@ -382,11 +504,13 @@ class Computer extends EventEmitter {
   onResamplingFrequencySliderValueChanged(slider) {
     this.resamplingFrequency = parseInt(this.$resamplingFrequency.value * 0.95 + 5);
     this.resampler.params.set('resamplingFrequency', this.resamplingFrequency);
+    this.$resamplingFrequencyValue.innerHTML = this.resamplingFrequency + ' Hz';
   }
 
   onFilterSizeSliderValueChanged(slider) {
     this.filterSize = parseInt(this.$filterSize.value * 0.49 + 1);
     this.mvAvrg.params.set('order', this.filterSize);
+    this.$filterSizeValue.innerHTML = this.filterSize + ' samples';
   }
 
   onRecordDataBtnClick() {
@@ -420,17 +544,30 @@ class Computer extends EventEmitter {
         minutes = Math.floor(realNow / 60000) % 60;
         seconds = Math.floor(realNow / 1000) % 60;
         ms = realNow % 1000;
-        // this.$recordDataTxt.innerHTML = `
-        //   ${formatWithZeroes(hours, 2)} h
-        //   ${formatWithZeroes(minutes, 2)} min
-        //   ${formatWithZeroes(seconds, 2)} s
-        //   ${formatWithZeroes(ms, 3)} ms
-        // `;
         this.$recordDataTxt.innerHTML = `
           ${formatWithZeroes(hours, 2)}:${formatWithZeroes(minutes, 2)}:${formatWithZeroes(seconds, 2)}:${formatWithZeroes(ms, 3)}
         `;
       }, 40);
     }
+  }
+
+  //===========================
+
+  onGestureRecBtnStateChanged(index, state) {
+    if (state === 'off') {
+      this.gestureRecognition.stopRecording();
+      this.gestureIndex = null;
+    } else {
+      this.gestureIndex = index;
+    }
+  }
+
+  onTrainingSetChanged(set) {
+    this.emit('machineLearning', 'trainingSet', set);
+  }
+
+  setGestureModel(model) {
+    this.gestureRecognition.setModel(model);
   }
 
   //=========================== waves-lfo bridges
@@ -460,12 +597,11 @@ class Computer extends EventEmitter {
       arrayFrame[i] = frame.data[i];
     }
 
-    ipc.send('oscserver', 'sendOSC', {
-      target: 'local',
-      msg: {
-        address: '/filteredSensors',
+    this.emit('localServer', 'osc', {
+      message: {
+        address: `/movuino/${this.info.id}/sensors`,
         args: arrayFrame,
-      },
+      }
     });
   }
 
@@ -488,9 +624,7 @@ class Computer extends EventEmitter {
       recording.push(item);
     });
 
-    ipc.send('renderer', 'recording', {
-      data: recording
-    });
+    this.emit('recording', recording);
   }
 
   repetitionsBridgeCallback(frame) {
@@ -504,12 +638,11 @@ class Computer extends EventEmitter {
         if (frame.data[i * 3 + 2] === 1) {
           const btn = this.$repetitionsBtnTrigs[i];
 
-          ipc.send('oscserver', 'sendOSC', {
-            target: 'local',
-            msg: {
-              address: '/repetitions',
+          this.emit('localServer', 'osc', {
+            message: {
+              address: `/movuino/${this.info.id}/repetitions`,
               args: [[ 'accelerometer', 'gyroscope', 'magnetometer' ][i]],
-            },
+            }
           });
 
           if (!btn.classList.contains('on')) {
@@ -525,30 +658,75 @@ class Computer extends EventEmitter {
     }
   }
 
-  gestureRecognitionBridgeCallback(frame) {
-    // TODO
+  stillAutoTriggerBridgeCallback(frame) {
+    const btn = this.gestureIndex !== null
+              ? this.$gestureRecBtns[this.gestureIndex]
+              : null;
 
-    // ipc.send('oscserver', 'sendOSC', {
-    //   target: 'local',
-    //   msg: {
-    //     address: '/gestureRecognition',
-    //     args: arrayFrame,
-    //   },
-    // });
+    if (frame.data[0] === 1) {
+      if (btn !== null) {
+        this.gestureRecognition.startRecording(this.gestureIndex);
+
+        if (btn.classList.contains('armed')) {
+          btn.classList.remove('armed');
+          btn.classList.add('recording');
+        }
+      }
+
+      this.gestureRecognition.reset();
+      this.gestureRecognitionOnOff.setState('on');
+    } else {
+      if (btn !== null && btn.classList.contains('recording')) {
+        btn.classList.remove('recording');
+        // don't forget this !!!
+        // (calls this.gestureRecognition.stopRecording() as well)
+        this.onGestureRecBtnStateChanged(this.gestureIndex, 'off');
+      }
+
+      this.gestureRecognitionOnOff.setState('off');
+    }
+  }
+
+  gestureRecognitionBridgeCallback(frame) {
+    const data = [];
+    frame.data.forEach((datum) => { data.push(datum); });
+
+    this.emit('localServer', 'osc', {
+      message: {
+        address: `/movuino/${this.info.id}/gestures`,
+        args: data,
+      }
+    });
   }
 
   setMovuinoConnected(connected) {
-    this.movuinoConnected = connected;
-
-    if (!connected) {
-      this.displayResampler.stop();
-      this.resampler.stop();
+    if (!connected && this.movuinoConnected) {
+      // this.displayResampler.stop();
       this.eventIn.stop();
-    } else {
+      this.resampler.stop();
+
+      for (let i = 0; i < 3; i++) {
+        this.waveformRenderers[i].stop();
+        this.repetitionsRenderers[i].stop();
+        this.gestureFollowRenderers[i].stop();
+      }
+
+      this.gestureRecRenderer.stop();
+    } else if (connected && !this.movuinoConnected) {
+      // this.displayResampler.start();
       this.eventIn.start();
       this.resampler.start();
-      this.displayResampler.start();
+
+      for (let i = 0; i < 3; i++) {
+        this.waveformRenderers[i].start();
+        this.repetitionsRenderers[i].start();
+        this.gestureFollowRenderers[i].start();
+      }
+
+      this.gestureRecRenderer.start();
     }
+
+    this.movuinoConnected = connected;
   }
 
   setWaveformData(data) {
@@ -556,7 +734,7 @@ class Computer extends EventEmitter {
       for (let i = 0; i < 3; i++) {
         this.waveformRenderers[i].setData(data[i]);
 
-        for (let j = 0; j < this.$waveformLabels[i].length; j++) {
+        for (let j = 0; j < 3 /*this.$waveformLabels[i].length*/; j++) {
           this.$waveformLabels[i][j].innerHTML = parseFloat(data[i][j]).toFixed(2);
         }
       }

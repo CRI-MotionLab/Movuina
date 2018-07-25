@@ -50,7 +50,7 @@ const config = {
   dist: {
 
     drivers: {
-      downloadPageUel: 'https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers',
+      downloadPageUrl: 'https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers',
       downloadUrl: 'https://www.silabs.com/documents/public/software/Mac_OSX_VCP_Driver.zip',
     },
 
@@ -85,10 +85,10 @@ const config = {
     //--------------------------------- servers ------------------------------//
 
     movuinoOSCServer: {
-      localAddress: '127.0.0.1',
-      localPort: 9001,
-      remoteAddress: '192.168.0.101', // whatever, will be updated
-      remotePort: 9000,
+      localAddress: '0.0.0.0',
+      localPort: 7400,
+      remoteAddress: '255.255.255.255', // whatever, will be updated
+      remotePort: 7401,
     },
 
     localOSCServer: {

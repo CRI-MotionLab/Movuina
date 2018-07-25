@@ -10,7 +10,7 @@ class WaveformRenderer extends Canvas2DRenderer {
     this.pointStyle = 'none';
     this.lineWidth = 1; // thin line, thickest : 1
 
-    this.minRes = 3;
+    this.minRes = 4;
     this.maxRes = 128;
     this.resolution = this.maxRes;
 
@@ -38,20 +38,23 @@ class WaveformRenderer extends Canvas2DRenderer {
 
   setData(data) {
     if (!data) return;
+    // if (!this.rendered) return;
+    if (!this._running) return;
 
-    if (!this.rendered) return;
     this.rendered = false;
 
     this.buffer.splice(0, 1);
 
+    const sensorValues = data.slice();
+
     for (let k = 0; k < this.dimension; k++) {
-      data[k] = Math.min(Math.max(data[k], this.minInput), this.maxInput);
-      data[k] -= this.minInput;
-      data[k] /= (this.maxInput - this.minInput);
-      data[k] = 1 - data[k];
+      sensorValues[k] = Math.min(Math.max(sensorValues[k], this.minInput), this.maxInput);
+      sensorValues[k] -= this.minInput;
+      sensorValues[k] /= (this.maxInput - this.minInput);
+      sensorValues[k] = 1 - sensorValues[k];
     }
 
-    this.buffer.push(data);
+    this.buffer.push(sensorValues);
   }
 
   get zoom() {

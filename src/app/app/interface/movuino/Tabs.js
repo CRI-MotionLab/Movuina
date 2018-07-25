@@ -41,6 +41,11 @@ class Tabs extends EventEmitter {
       this.setTab(t);
     });
 
+    const $close = $el.querySelector('.close-icon');
+    $close.addEventListener('click', () => {
+      console.log('I would like to close tab n°' + t);
+    });
+
     this.$tabsList.appendChild($el);
   }
 

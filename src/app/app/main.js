@@ -1,71 +1,76 @@
 import path from 'path'
-import url from 'url';
 import { app, Menu } from 'electron';
-import osc from 'osc';
-import config from '../../config'; // this is just a copy of build/config/<used_config_name>.js
 
 import {
   AppMenu,
-  Serial,
-  Renderer,
-  WebServer,
-  OSCServer,
+  Devices,
+  LocalServer,
+  MachineLearning,
+  ViewController,
 } from './core';
 
-const serial = new Serial(config);
-const renderer = new Renderer(config);
-const webServer = new WebServer(config);
-const oscServer = new OSCServer(config);
+// view controller is the central communication hub between core and interface
+// it routes all osc messages to the connection displays
+const controller = new ViewController();
+const devices = new Devices();
+const localServer = new LocalServer();
+const machineLearning = new MachineLearning();
 
-//--------------------------------------- serial <> renderer communication
+// single device version
+devices.setActiveDevice(devices.addDevice());
 
-renderer.on('serial', (cmd, arg) => { // 'refresh' or 'ports'
-  serial.executeSerialCommand(cmd, arg);
+
+devices.on('controller', function(cmd, arg) { // target: controller
+  controller.send('devices', cmd, arg); // source: devices
 });
 
-renderer.on('movuino', (cmd, arg) => {
-  serial.executeMovuinoCommand(cmd, arg);
+localServer.on('controller', function(cmd, arg) { // target: controller
+  controller.send('localServer', cmd, arg); // source: localServer
 });
 
-// renderer.on('tabs', (cmd, args) => {
-// });
-
-serial.on('serial', (cmd, args) => {
-  renderer.send('serial', cmd, args);
+controller.on('devices', function(cmd, arg) {
+  devices.executeCommand('controller', cmd, arg);
 });
 
-serial.on('movuino', (cmd, args) => {
-  renderer.send('movuino', cmd, args);
+controller.on('localServer', function(cmd, arg) {
+  localServer.executeCommand('controller', cmd, arg);
 });
 
-renderer.on('oscserver', (cmd, args) => {
-  oscServer.executeCommand(cmd, args);
+controller.on('machineLearning', function(cmd, arg) {
+  machineLearning.executeCommand('controller', cmd, arg);
 });
 
-oscServer.on('renderer', (cmd, args) => {
-  renderer.send('oscserver', cmd, args);
-});
+machineLearning.on('controller', function(cmd, arg) {
+  controller.send('machineLearning', cmd, arg);
+})
+
+//========================== APP SPECIFIC STUFF ==============================//
 
 AppMenu.on('device', (cmd, args) => {
-  renderer.send('menu', 'device', cmd, args);
+  controller.send('menu', 'device', cmd, args);
 });
 
 AppMenu.on('showOSCConnections', (show) => {
-  renderer.send('menu', 'showOSCConnections', show);
+  controller.send('menu', 'showOSCConnections', show);
 });
-
-//--------------------------------------- app stuff
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-
 app.on('ready', () => {
   const menu = Menu.buildFromTemplate(AppMenu.getMenuTemplate());
-  // AppMenu.setMenu(menu);
   Menu.setApplicationMenu(menu);
 
-  renderer.createWindow();
+  controller.createWindow();
+  controller.on('loaded', () => {
+    AppMenu.initMenu(menu);
+  });
+
+  Promise.all([ devices.start(), localServer.start() ])
+  .then(() => {
+    console.log('everybody started successfully');
+  })
+  .catch((err) => console.error(err.message));
 });
 
 // Quit when all windows are closed.
@@ -76,16 +81,18 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
-  // kill server, do
-  renderer.deleteWindow();
+  devices.stop();
+  localServer.stop();
+  controller.deleteWindow();
 });
 
 app.on('activate', () => {
   // On macOS it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  renderer.createWindow();
+  controller.createWindow();
 });
 
+//----------------------------------------------------------------------------//
 
 // this is for development only, to allow restarting electron on each
 // project modification, but does no harm remaining here.

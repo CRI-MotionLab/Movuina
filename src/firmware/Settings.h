@@ -30,9 +30,8 @@ private:
   bool sendOSCSensors;
   bool sendSerialSensors;
 
-  // todo: r/w from EEPROM ?
-  bool sendOSCHeartBeat;
-  bool sendSerialHeartBeat;
+  // bool sendOSCHeartBeat;
+  // bool sendSerialHeartBeat;
 
 public:
   Settings() {

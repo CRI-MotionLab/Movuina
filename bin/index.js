@@ -197,7 +197,7 @@ function package() {
   // (was packaging symlink to node_modules, not original node_module folder into the build)
 
   // LIKE THIS, NO PROBLEM
-  fs.removeSync(paths.nodeModules);
+  fs.removeSync(paths.nodeModulesDist);
   fs.copySync(paths.nodeModules, paths.nodeModulesDist);
   packager({
     dir: paths.dist,
