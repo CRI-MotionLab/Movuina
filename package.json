@@ -1,6 +1,6 @@
 {
   "name": "Movuina",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "hub application for movuino sensors and more",
   "main": "app/app/main.js",
   "scripts": {
