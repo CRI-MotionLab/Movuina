@@ -99,6 +99,11 @@ class Movuino extends EventEmitter {
   }
 
   udpMessageListener({ address, args }, timeTag, info) {
+    if (this.info.movuinoIP !== info.address) {
+      this.info.movuinoIP = info.address;
+      this.emit('info', this.info);
+    }
+
     this.emit('osc', 'wifi', { address: address, args: args });
     this.emit('resolve');
   }
@@ -115,7 +120,6 @@ class Movuino extends EventEmitter {
     }
 
     if (message.medium === 'serial' && this.info.serialPortReady) {
-      console.log('sending serial message');
       this.serialPort.send(msg);
     } else if (message.medium === 'wifi' && this.info.udpPortReady) {
       this.udpPort.send(msg, this.info.movuinoIP, this.outputUDPPort);

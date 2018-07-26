@@ -75,8 +75,8 @@ class Movuino extends EventEmitter {
           address: '/wifi/set',
           args: [
             { type: 's', value: this.info.ssid },
-            { type: 's', value: this.info.password},
-            { type: 's', value: this.info.hostIP},
+            { type: 's', value: this.info.password },
+            { type: 's', value: this.info.hostIP },
           ]
         }
       });

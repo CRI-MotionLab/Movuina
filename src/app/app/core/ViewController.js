@@ -172,6 +172,11 @@ class ViewController extends EventEmitter {
 
       if (cmd === 'osc' && arg.medium === 'wifi' && this.window !== null) {
         arg.message.port = config.dist.movuinoOSCServer.remotePort;
+        const args = [];
+        arg.message.args.forEach((a) => {
+          args.push(typeof a === 'object' ? a.value : a);
+        });
+        arg.message.args = args;
         this.window.webContents.send('oscDisplay', 'movIn', arg);
       }
     });

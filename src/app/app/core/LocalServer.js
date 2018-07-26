@@ -13,7 +13,7 @@ class LocalServer extends EventEmitter {
     if (origin === 'controller') {
       switch (cmd) {
         case 'osc':
-        this.send(arg.message);
+          this.send(arg.message);
           break;
         default:
           break;

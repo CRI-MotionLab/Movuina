@@ -190,9 +190,11 @@ class Computer extends EventEmitter {
       const on = this.$vibroOnOff.classList.toggle('on');
       const address = `/movuino/${this.info.id}/vibroNow`;
       if (on) {
-        this.onVibroNow({ address: address, args: [ 1 ] });
+        this.onVibroNow({ address: address, args: [{ type: 'i', value: 1 }] });
+        // this.onVibroNow({ address: address, args: [ 1 ] });
       } else {
-        this.onVibroNow({ address: address, args: [ 0 ] });
+        this.onVibroNow({ address: address, args: [{ type: 'i', value: 0 }] });
+        // this.onVibroNow({ address: address, args: [ 0 ] });
       }
     });
 
@@ -204,9 +206,12 @@ class Computer extends EventEmitter {
       const nbRepetitions = parseInt(this.$vibroPulseNbRepetitions.value);
 
       const data = [
-        isNaN(onDur) ? 0 : onDur,
-        isNaN(offDur) ? 0 : offDur,
-        isNaN(nbRepetitions) ? 0 : nbRepetitions,
+        { type: 'i', value: isNaN(onDur) ? 0 : onDur },
+        { type: 'i', value: isNaN(offDur) ? 0 : offDur },
+        { type: 'i', value: isNaN(nbRepetitions) ? 0 : nbRepetitions },
+        // isNaN(onDur) ? 0 : onDur,
+        // isNaN(offDur) ? 0 : offDur,
+        // isNaN(nbRepetitions) ? 0 : nbRepetitions,
       ];
 
       this.onVibroPulse({

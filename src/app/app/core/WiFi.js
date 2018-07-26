@@ -1,6 +1,4 @@
 import EventEmitter from 'events';
-// import nmap from 'libnmap';
-// import isPortReachable from 'is-port-reachable';
 import osc from 'osc';
 
 // this is just a copy of build/config/<used_config_name>.js
@@ -14,15 +12,10 @@ import { getMovuinoIdAndOSCSuffixFromAddress } from './util';
 class WiFi extends EventEmitter {
   constructor() {
     super();
-    // try {
-      this.udpPort = new osc.UDPPort({
-        localAddress: config.dist.movuinoOSCServer.localAddress,
-        localPort: config.dist.movuinoOSCServer.localPort
-      });      
-    // } catch (err) {
-    //   this.udpPort = null;
-    //   console.log(err.message);
-    // }
+    this.udpPort = new osc.UDPPort({
+      localAddress: config.dist.movuinoOSCServer.localAddress,
+      localPort: config.dist.movuinoOSCServer.localPort
+    });      
     this.udpPortReady = false;
     this.interval = null;
     this.lastUDPMessageDates = new Map();
@@ -31,17 +24,6 @@ class WiFi extends EventEmitter {
 
   startObservingOSCMessages() {
     return new Promise((resolve, reject) => {
-      // nmap.scan({
-      //   ports: `${config.dist.movuinoOSCServer.localPort}`,
-      //   range: [ 'localhost' ],
-      // }, (err, report) => {
-      //   console.log(err);
-      //   console.log(JSON.stringify(report, null, 2));
-      // });
-
-      // isPortReachable(config.dist.movuinoOSCServer.localPort, { host: '0.0.0.0' })
-      // .then((r) => { console.log('port reachable: ' + r); });
-
       this.udpPort.on('error', (err) => { console.log(err.message); });
 
       this.udpPort.on('ready', () => {
@@ -53,6 +35,7 @@ class WiFi extends EventEmitter {
         const parts = getMovuinoIdAndOSCSuffixFromAddress(address);
 
         let idIsNew = false;
+
         if (!this.lastUDPMessageDates.has(parts.id)) {
           idIsNew = true;
         }
@@ -66,11 +49,7 @@ class WiFi extends EventEmitter {
         this.udpPort.emit(`movuino-${parts.id}`, { address: address, args: args }, timeTag, info);
       });
 
-      // try {
-        this.udpPort.open();
-      // } catch (err) {
-      //   console.log(err.message);
-      // }
+      this.udpPort.open();
 
       this.interval = setInterval(() => {
         const now = Date.now();
