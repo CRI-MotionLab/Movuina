@@ -1,19 +1,19 @@
 import { ipcRenderer as ipc } from 'electron';
 import EventEmitter from 'events';
 
-import WaveformRenderer from '../../../shared/renderers/WaveformRenderer';
-import RepetitionsRenderer from '../../../shared/renderers/RepetitionsRenderer';
-import GestureRecorderRenderer from '../../../shared/renderers/GestureRecorderRenderer';
-import GestureFollowerRenderer from '../../../shared/renderers/GestureFollowerRenderer';
+import WaveformRenderer from '../../shared/renderers/WaveformRenderer';
+import RepetitionsRenderer from '../../shared/renderers/RepetitionsRenderer';
+import GestureRecorderRenderer from '../../shared/renderers/GestureRecorderRenderer';
+import GestureFollowerRenderer from '../../shared/renderers/GestureFollowerRenderer';
 
 import * as lfo from 'waves-lfo/client';
 
-import Resampler from '../../../shared/lfos/Resampler';
-import Repetitions from '../../../shared/lfos/Repetitions';
-import Intensity from '../../../shared/lfos/Intensity';
-import StillAutoTrigger from '../../../shared/lfos/StillAutoTrigger';
-import GestureRecognition from '../../../shared/lfos/GestureRecognition';
-import { colors, getMovuinoIdAndOSCSuffixFromAddress } from '../../core/util';
+import Resampler from '../../shared/lfos/Resampler';
+import Repetitions from '../../shared/lfos/Repetitions';
+import Intensity from '../../shared/lfos/Intensity';
+import StillAutoTrigger from '../../shared/lfos/StillAutoTrigger';
+import GestureRecognition from '../../shared/lfos/GestureRecognition';
+import { colors, getMovuinoIdAndOSCSuffixFromAddress } from '../core/util';
 
 class Computer extends EventEmitter {
   constructor() {
@@ -52,6 +52,7 @@ class Computer extends EventEmitter {
     this.processRecordedData = this.processRecordedData.bind(this);
     this.repetitionsBridgeCallback = this.repetitionsBridgeCallback.bind(this);
     this.stillAutoTriggerBridgeCallback = this.stillAutoTriggerBridgeCallback.bind(this);
+    this.gestureRecordingBridgeCallback = this.gestureRecordingBridgeCallback.bind(this);
     this.gestureRecognitionBridgeCallback = this.gestureRecognitionBridgeCallback.bind(this);
 
     this.gestureIndex = null;
@@ -69,14 +70,14 @@ class Computer extends EventEmitter {
     this.resampler = new Resampler({
       resamplingFrequency: this.resamplingFrequency,
     });
+
     this.mvAvrg = new lfo.operator.MovingAverage({
       order: this.filterSize,
       fill: 0,
     });
 
-    this.displayResampler = new Resampler({
-      resamplingFrequency: 20,
-    });
+    this.displayResampler = new Resampler({ resamplingFrequency: 20 });
+
     this.displayBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.displayBridgeCallback(frame); },
     });
@@ -90,23 +91,12 @@ class Computer extends EventEmitter {
     })
 
     this.filteredAccSelector = new lfo.operator.Select({ indexes: [ 0, 1, 2 ] });
-    // this.accMagnitude = new lfo.operator.Magnitude();
-    // this.accMultiplier = new lfo.operator.Multiplier({ factor: 100 });
     this.accRepetitions = new Repetitions();
-
     this.filteredGyrSelector = new lfo.operator.Select({ indexes: [ 3, 4, 5 ] });
-    // this.gyrMagnitude = new lfo.operator.Magnitude();
-    // this.gyrMultiplier = new lfo.operator.Multiplier({ factor: 100 });
     this.gyrRepetitions = new Repetitions();
-
     this.filteredMagSelector = new lfo.operator.Select({ indexes: [ 6, 7, 8 ] });
-    // this.magMagnitude = new lfo.operator.Magnitude();
-    // this.magMultiplier = new lfo.operator.Multiplier({ factor: 100 });
     this.magRepetitions = new Repetitions();
-
-
     this.repetitionsMerger = new lfo.operator.Merger({ frameSizes: [ 3, 3, 3 ] });
-
     this.repetitionsBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.repetitionsBridgeCallback(frame); },
     });
@@ -126,6 +116,9 @@ class Computer extends EventEmitter {
     });
 
     this.gestureRecognitionOnOff = new lfo.operator.OnOff({ state: 'off' });
+    this.gestureRecordingBridge = new lfo.sink.Bridge({
+      processFrame: (frame) => { this.gestureRecordingBridgeCallback(frame); },
+    })
     this.gestureRecognition = new GestureRecognition(this.onTrainingSetChanged);
     this.gestureRecognitionBridge = new lfo.sink.Bridge({
       processFrame: (frame) => { this.gestureRecognitionBridgeCallback(frame); },
@@ -171,6 +164,9 @@ class Computer extends EventEmitter {
     this.stillAutoTrigger.connect(this.stillAutoTriggerBridge);
 
     this.filteredAccSelector.connect(this.gestureRecognitionOnOff);
+
+    this.gestureRecognitionOnOff.connect(this.gestureRecordingBridge);
+
     this.gestureRecognitionOnOff.connect(this.gestureRecognition);
     this.gestureRecognition.connect(this.gestureRecognitionBridge);
   }
@@ -328,7 +324,6 @@ class Computer extends EventEmitter {
     for (let i = 0; i < 3; i++) {
       const rep = this.$repetitionsCanvasTrigs[i];
       this.repetitionsRenderers.push(new RepetitionsRenderer(rep, [ this.fillStyles[i], this.lightGrey ]));
-      // this.repetitionsRenderers[i].start();
     }
 
     //========================== GESTURE RECOGNITION =========================//
@@ -387,11 +382,17 @@ class Computer extends EventEmitter {
 
     for (let i = 0; i < 3; i++) {
       const gf = this.$gestureFollowCanvas[i];
-      const gfRenderer = new GestureFollowerRenderer(gf, this.fillStyles)
+      const gfRenderer = new GestureFollowerRenderer(gf, this.fillStyles[i])
       this.gestureFollowRenderers.push(gfRenderer);
-      // this.gestureFollowRenderers[i].start();
     }
 
+    this.$gestureFollowPercents = [
+      document.querySelector('#gesture-1-follow-display-percent'),
+      document.querySelector('#gesture-2-follow-display-percent'),
+      document.querySelector('#gesture-3-follow-display-percent'),
+    ];
+
+    // this calls start(), then stop() on all renderers
     this.setMovuinoConnected(true);
     this.setMovuinoConnected(false);
     this.initialized = true;
@@ -671,6 +672,7 @@ class Computer extends EventEmitter {
     if (frame.data[0] === 1) {
       if (btn !== null) {
         this.gestureRecognition.startRecording(this.gestureIndex);
+        this.gestureRecRenderer.reset();
 
         if (btn.classList.contains('armed')) {
           btn.classList.remove('armed');
@@ -692,7 +694,25 @@ class Computer extends EventEmitter {
     }
   }
 
+  gestureRecordingBridgeCallback(frame) {
+    if (this.gestureRecognition.recording) {
+      this.gestureRecRenderer.setData(frame.data);
+    }
+  }
+
   gestureRecognitionBridgeCallback(frame) {
+    this.gestureFollowRenderers.forEach((r) => { r.setFocus(false); });
+
+    if (frame.data[0] !== 0) {
+      console.log()
+      const index = frame.data[0] - 1;
+      const r = this.gestureFollowRenderers[index];
+      r.setFocus(true);
+      r.setData(frame.data[1]);
+
+      this.$gestureFollowPercents[index].innerHTML = `${parseInt(frame.data[1] * 100)} %`;
+    }
+
     const data = [];
     frame.data.forEach((datum) => { data.push(datum); });
 

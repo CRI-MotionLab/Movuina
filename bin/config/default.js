@@ -68,7 +68,7 @@ const config = {
           data: {
             title: 'Movuina',
             style: 'main',
-            script: 'movuino',
+            script: 'interface',
           }
         },
       },

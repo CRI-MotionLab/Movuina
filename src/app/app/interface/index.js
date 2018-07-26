@@ -1,9 +1,9 @@
 import { ipcRenderer as ipc, remote } from 'electron';
-import Script from '../../../shared/core/Script';
+import Script from '../../shared/core/Script';
 import Movuino from './Movuino';
 import Connections from './Connections';
 import Computer from './Computer';
-import Tabs from './Tabs';
+// import Tabs from './Tabs';
 import ejs from 'ejs';
 
 //============================ ELECTRON STUFF ================================//
@@ -306,7 +306,5 @@ class Main extends Script {
     }
   }
 };
-
-console.log('bonne nuit les petits');
 
 const main = new Main();

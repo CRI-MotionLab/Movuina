@@ -1,6 +1,6 @@
 import EventEmitter from 'events';
 import { ipcRenderer as ipc } from 'electron';
-import BargraphRenderer from '../../../shared/renderers/BargraphRenderer';
+import BargraphRenderer from '../../shared/renderers/BargraphRenderer';
 
 class Movuino extends EventEmitter {
   constructor() {
