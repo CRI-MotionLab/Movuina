@@ -1,5 +1,6 @@
 import EventEmitter from 'events';
 import serial from 'serialport';
+import path from 'path';
 import fs from 'fs-extra';
 
 // this is just a copy of build/config/<used_config_name>.js
@@ -47,24 +48,27 @@ function checkIfPortsListChanged(prevList, newList) {
 //----------------------------------------------------------------------------//
 
 function checkIfDriverIsInstalled() {
-  let driverIsInstalled = true;
-
-  // not necessary to check in windows (?)
-  // todo : check for linux
   if (process.platform === 'darwin') {
-    driverIsInstalled = false;
     let files = fs.readdirSync('/System/Library/Extensions');
     files = files.concat(fs.readdirSync('/Library/Extensions'));
 
     for (let i = 0; i < files.length; ++i) {
       if (files[i].indexOf('SiLabsUSBDriver') !== -1) {
-        driverIsInstalled = true;
-        break;
+        return true;
       }
     }
+
+    return false;
   }
 
-  return driverIsInstalled;
+  if (process.platform === 'win32') {
+    fs.stat('c:\\Windows\\System32\\drivers\\silabser.sys', function(err, stat) {
+      return err === null;
+    });
+  }
+
+  // todo : check for linux
+  return true;
 };
 
 //----------------------- static vars for Serial class -----------------------//
@@ -81,7 +85,7 @@ class Serial extends EventEmitter {
 
   startObservingSerialPorts() {
     if (!checkIfDriverIsInstalled()) {
-      this.emit('noDriverInstalled', config.dist.drivers.downloadUrl);
+      this.emit('noDriverInstalled', config.dist.drivers.downloadPageUrl);
     }
 
     interval = setInterval(() => {

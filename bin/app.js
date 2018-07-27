@@ -39,7 +39,7 @@ App.prototype.stop = function() {
   return new Promise((resolve, reject) => {
     if (this.app !== null) {
       logger.notifyAppTask('closing app');
-      this.app.stdin.write('quit');
+      this.app.stdin.write('quit\r\n');
       this.app.on('close', (code) => {
         this.app = null;
         resolve();

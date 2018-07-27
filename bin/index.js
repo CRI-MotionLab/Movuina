@@ -146,6 +146,21 @@ function build() {
   });
 }
 
+function rebuild() {
+  switch (process.platform) {
+    case 'win32':
+      spawn('.\\node_modules\\.bin\\electron-rebuild.cmd', [ '-o', 'xmm-node', 'node-serialport' ], {
+        stdio: 'pipe',
+      });
+      break;
+    default:
+      spawn('electron-rebuild', [ '-o', 'xmm-node' ], {
+        stdio: 'pipe',
+      });
+      break;
+  }
+}
+
 function versions() {
   let electron;
   switch (process.platform) {

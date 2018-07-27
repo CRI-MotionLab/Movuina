@@ -26,7 +26,7 @@ class Devices extends EventEmitter {
   start() {
     return new Promise((resolve, reject) => {
       serial.on('serialPorts', this._updateSerialPorts);
-      serial.on('noDriverInstalled', () => { this.emit('controller', 'noDriverInstalled'); });
+      serial.on('noDriverInstalled', (url) => { this.emit('controller', 'noDriverInstalled', url); });
       serial.startObservingSerialPorts();
 
       wifi.on('wifiConnections', this._updateWiFiConnections);

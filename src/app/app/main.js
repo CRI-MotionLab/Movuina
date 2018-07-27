@@ -62,15 +62,18 @@ app.on('ready', () => {
   Menu.setApplicationMenu(menu);
 
   controller.createWindow();
+
   controller.on('loaded', () => {
     AppMenu.initMenu(menu);
   });
 
-  Promise.all([ devices.start(), localServer.start() ])
-  .then(() => {
-    console.log('everybody started successfully');
-  })
-  .catch((err) => console.error(err.message));
+  controller.once('loaded', () => {
+    Promise.all([ devices.start(), localServer.start() ])
+    .then(() => {
+      // console.log('everybody started successfully');
+    })
+    .catch((err) => console.error(err.message));
+  });
 });
 
 // Quit when all windows are closed.
@@ -102,6 +105,7 @@ process.stdin.on('data', (msg) => {
       // todo: reload app ?
       break;
     case 'quit':
+      console.log('calling app.quit()');
       app.quit();
       break;
     case 'server:restart':
