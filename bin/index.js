@@ -89,7 +89,9 @@ function symLinkAllNodeModulesInDist() {
 //============================ SCRIPT SELECTOR =============================//
 
 if (process.argv.length > 2) {
-  if (process.argv[2] === 'build') {
+  if (process.argv[2] === 'rebuild') {
+    rebuild();
+  } else if (process.argv[2] === 'build') {
     build().then(package);
   } else if (process.argv[2] === 'watch') {
     build().then(start);
@@ -143,6 +145,22 @@ function build() {
       logger.notifyDone();
       resolve();
     });
+  });
+}
+
+function rebuild() {
+  let electronRebuild;
+  switch (process.platform) {
+    case 'win32':
+      electronRebuild = '.\\node_modules\\.bin\\electron-rebuild.cmd';
+      break;
+    default:
+      electronRebuild = './node_modules/.bin/electron-rebuild';
+      break;
+  }
+
+  spawn(electronRebuild, [ '-o', 'xmm-node' ], {
+    stdio: [ 'pipe', process.stdout, process.stderr ],
   });
 }
 

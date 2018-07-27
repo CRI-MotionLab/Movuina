@@ -7,6 +7,7 @@
     "version": "node bin/index.js version",
     "watch": "node bin/index.js watch",
     "build": "node bin/index.js build",
+    "postinstall": "node bin/index.js rebuild",
     "rebuild": "./node_modules/.bin/electron-rebuild.cmd -o xmm-node",
     "test": "echo \"TODO: write some tests\" && exit 1"
   },
@@ -26,6 +27,7 @@
     "movuino": "github:topela/movuino.js#master",
     "mustache": "^2.3.0",
     "osc": "^2.2.3",
+    "rapid-mix-adapters": "github:ircam-rnd/rapid-mix-adapters",
     "serialport": "6.2.0",
     "serve-favicon": "^2.4.5",
     "uglify-js": "^3.3.14",
