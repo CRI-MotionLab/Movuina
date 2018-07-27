@@ -89,14 +89,17 @@ function symLinkAllNodeModulesInDist() {
 //============================ SCRIPT SELECTOR =============================//
 
 if (process.argv.length > 2) {
-  if (process.argv[2] === 'rebuild') {
+  const cmd = process.argv[2];
+  if (cmd === 'rebuild') {
     rebuild();
-  } else if (process.argv[2] === 'build') {
+  } else if (cmd === 'build') {
     build().then(package);
-  } else if (process.argv[2] === 'watch') {
+  // } else if (cmd === 'createWindowsInstaller') {
+  //   createWindowsInstaller();
+  } else if (cmd === 'watch') {
     build().then(start);
     watchSource();
-  } else if (process.argv[2] === 'version') {
+  } else if (cmd === 'version') {
     versions();
   }
 }
@@ -149,19 +152,18 @@ function build() {
 }
 
 function rebuild() {
-  let electronRebuild;
   switch (process.platform) {
     case 'win32':
-      electronRebuild = '.\\node_modules\\.bin\\electron-rebuild.cmd';
+      spawn('.\\node_modules\\.bin\\electron-rebuild.cmd', [ '-o', 'serialport,xmm-node' ], {
+        stdio: [ process.stdin, process.stdout, process.stderr ],
+      });
       break;
     default:
-      electronRebuild = './node_modules/.bin/electron-rebuild';
+      spawn('electron-rebuild', [ '-o', 'xmm-node' ], {
+        stdio: [ process.stdin, process.stdout, process.stderr ],
+      });
       break;
   }
-
-  spawn(electronRebuild, [ '-o', 'xmm-node' ], {
-    stdio: [ 'pipe', process.stdout, process.stderr ],
-  });
 }
 
 function versions() {
@@ -224,7 +226,33 @@ function package() {
     overwrite: true,
     icon: path.join(paths.assetsSrc, iconFilename),
   })
-  .then((appPaths) => { console.log(appPaths); });
+  .then((appPaths) => {
+    console.log(appPaths);
+    // createWindowsInstaller();
+  });
+}
+
+function createWindowsInstaller() {
+  return new Promise((resolve, reject) => {
+    if (process.platform === 'win32') {
+      var electronInstaller = require('electron-winstaller');
+
+      electronInstaller.createWindowsInstaller({
+        appDirectory: path.join(cwd, 'build/Movuina-win32-x64'),
+        outputDirectory: path.join(cwd, 'build/Movuina-installer-win32-x64'),
+        authors: 'CRI Paris',
+        exe: 'Movuina.exe'
+      })
+      .then(() => {
+        console.log("It worked!");
+        resolve();
+      }, (e) => {
+        console.log(`No dice: ${e}`);
+      });        
+    } else {
+      resolve();
+    }
+  });
 }
 
 //* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */

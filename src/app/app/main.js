@@ -1,5 +1,6 @@
 import path from 'path'
 import { app, Menu } from 'electron';
+import { handleSquirrelEvent } from './core/util';
 
 import {
   AppMenu,
@@ -8,6 +9,9 @@ import {
   MachineLearning,
   ViewController,
 } from './core';
+
+if (require('electron-squirrel-startup')) app.quit();
+if (handleSquirrelEvent(app)) app.quit();
 
 // view controller is the central communication hub between core and interface
 // it routes all osc messages to the connection displays
@@ -62,15 +66,18 @@ app.on('ready', () => {
   Menu.setApplicationMenu(menu);
 
   controller.createWindow();
+
   controller.on('loaded', () => {
     AppMenu.initMenu(menu);
   });
 
-  Promise.all([ devices.start(), localServer.start() ])
-  .then(() => {
-    console.log('everybody started successfully');
-  })
-  .catch((err) => console.error(err.message));
+  controller.once('loaded', () => {
+    Promise.all([ devices.start(), localServer.start() ])
+    .then(() => {
+      // console.log('everybody started successfully');
+    })
+    .catch((err) => console.error(err.message));
+  });
 });
 
 // Quit when all windows are closed.
@@ -102,6 +109,7 @@ process.stdin.on('data', (msg) => {
       // todo: reload app ?
       break;
     case 'quit':
+      console.log('calling app.quit()');
       app.quit();
       break;
     case 'server:restart':

@@ -204,8 +204,8 @@ class ViewController extends EventEmitter {
     });
 
     this.window.on('close', (e) => {
-      e.preventDefault();
-      this.send('menu', 'closeCurrentTab');
+      // e.preventDefault();
+      // this.send('menu', 'closeCurrentTab');
     });
 
     this.window.on('closed', () => {
