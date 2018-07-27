@@ -1,5 +1,6 @@
 import path from 'path'
 import { app, Menu } from 'electron';
+import { handleSquirrelEvent } from './core/util';
 
 import {
   AppMenu,
@@ -8,6 +9,9 @@ import {
   MachineLearning,
   ViewController,
 } from './core';
+
+if (require('electron-squirrel-startup')) app.quit();
+if (handleSquirrelEvent(app)) app.quit();
 
 // view controller is the central communication hub between core and interface
 // it routes all osc messages to the connection displays
