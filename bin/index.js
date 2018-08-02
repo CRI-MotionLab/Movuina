@@ -94,8 +94,8 @@ if (process.argv.length > 2) {
     rebuild();
   } else if (cmd === 'build') {
     build().then(package);
-  // } else if (cmd === 'createWindowsInstaller') {
-  //   createWindowsInstaller();
+  } else if (cmd === 'createWindowsInstaller') {
+    createWindowsInstaller();
   } else if (cmd === 'watch') {
     build().then(start);
     watchSource();
@@ -225,6 +225,7 @@ function package() {
     out: paths.build,
     overwrite: true,
     icon: path.join(paths.assetsSrc, iconFilename),
+    asar: true,
   })
   .then((appPaths) => {
     console.log(appPaths);
