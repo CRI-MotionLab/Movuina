@@ -1,6 +1,6 @@
 # Movuina
 
-## electron application for movuino sensors and more
+## electron based OSC middleware for movuino sensors
 
 #### getting started
 
