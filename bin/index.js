@@ -241,8 +241,13 @@ function createWindowsInstaller() {
       electronInstaller.createWindowsInstaller({
         appDirectory: path.join(cwd, 'build/Movuina-win32-x64'),
         outputDirectory: path.join(cwd, 'build/Movuina-installer-win32-x64'),
-        authors: 'CRI Paris',
-        exe: 'Movuina.exe'
+        authors: 'Joseph Larralde',
+        owners: 'CRI Paris',
+        exe: 'Movuina.exe',
+        iconUrl: 'https://raw.githubusercontent.com/CRI-MotionLab/Movuina/master/assets/movuino.ico',
+        setupExe: 'MovuinaSetup.exe',
+        setupIcon: path.join(paths.assetsSrc, 'movuino.ico'),
+        noMsi: true,
       })
       .then(() => {
         console.log("It worked!");
