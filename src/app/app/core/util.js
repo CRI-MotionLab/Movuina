@@ -13,6 +13,8 @@ const colors = [
   lightRed
 ];
 
+
+
 const handleSquirrelEvent = (app) => {
   if (process.platform !== 'win32' || process.argv.length === 1) {
     return false;
@@ -30,7 +32,7 @@ const handleSquirrelEvent = (app) => {
     let spawnedProcess, error;
 
     try {
-      spawnedProcess = ChildProcess.spawn(command, args, {detached: true});
+      spawnedProcess = ChildProcess.spawn(command, args, { detached: true });
     } catch (error) {}
 
     return spawnedProcess;
@@ -124,7 +126,7 @@ function stripMovuinoOSCPrefix(address, id) {
 
 //----------------------------------------------------------------------------//
 
-const createExcelDocFromRecording = (recording) => {
+function createExcelDocFromRecording(recording) {
   const wb = new xl.Workbook();
   const ws = wb.addWorksheet('Sensors');
 
@@ -173,7 +175,34 @@ const createExcelDocFromRecording = (recording) => {
   }
 
   return wb.writeToBuffer(); // Promise
-};
+}
+
+function createCsvDocFromRecording(recording) {
+  return new Promise((resolve, reject) => {
+    const buffers = [];
+    let totalLength = 0;
+    const zero = recording[0].time;
+
+    const headerLine = 'time,accelX,accelY,accelZ,gyroX,gyroY,gyroZ,magX,magY,magZ\n';
+    const headerBuf = Buffer.from(headerLine, 'utf-8');
+    buffers.push(headerBuf);
+    totalLength += headerBuf.length;
+
+    for (let i = 0; i < recording.length; i++) {
+      const time = recording[i].time - zero;
+      let line = `${time}`;
+      for (let j = 0; j < recording[i].data.length; j++) {
+        line += `,${recording[i].data[j]}`;
+      }
+      line += '\n';
+      const buf = Buffer.from(line, 'utf-8');
+      buffers.push(buf);
+      totalLength += buf.length;
+    }
+
+    resolve(Buffer.concat(buffers, totalLength));
+  });
+}
 
 //----------------------------------------------------------------------------//
 
@@ -184,4 +213,5 @@ export {
   getMovuinoIdAndOSCSuffixFromAddress,
   stripMovuinoOSCPrefix,
   createExcelDocFromRecording,
+  createCsvDocFromRecording,
 };

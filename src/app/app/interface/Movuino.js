@@ -69,14 +69,18 @@ class Movuino extends EventEmitter {
       this.allowUpdateWiFiConnections = false;
       setTimeout(() => { this.allowUpdateWiFiConnections = true; }, 1000);
 
+      // this.updateInfoFromDOM();
+
+      const hostIP = `${this.$ip1.value}.${this.$ip2.value}.${this.$ip3.value}.${this.$ip4.value}`;
+
       this.emit('devices', 'osc', {
         medium: 'serial',
         message: {
           address: '/wifi/set',
           args: [
-            { type: 's', value: this.info.ssid },
-            { type: 's', value: this.info.password },
-            { type: 's', value: this.info.hostIP },
+            { type: 's', value: this.$ssid.value },
+            { type: 's', value: this.$password.value },
+            { type: 's', value: hostIP },
           ]
         }
       });
@@ -166,6 +170,12 @@ class Movuino extends EventEmitter {
     this.setWiFiState(this.info.wifiState);
     this.setMovuinoIP(this.info.movuinoIP);
   }
+
+  // updateInfoFromDOM() {
+  //   this.info.ssid = this.$ssid.value;
+  //   this.info.password = this.$password.value;
+  //   this.info.hostIP = `${this.$ip1}.${this.$ip2}.${this.$ip3}.${this.$ip4}`;
+  // }
 
   processOSCMessage(message) {
     if (this.info !== null && message.id === this.info.id &&

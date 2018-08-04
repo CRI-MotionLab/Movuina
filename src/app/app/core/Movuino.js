@@ -120,6 +120,7 @@ class Movuino extends EventEmitter {
     }
 
     if (message.medium === 'serial' && this.info.serialPortReady) {
+      console.log(JSON.stringify(message, null, 2));
       this.serialPort.send(msg);
     } else if (message.medium === 'wifi' && this.info.udpPortReady) {
       this.udpPort.send(msg, this.info.movuinoIP, this.outputUDPPort);
@@ -157,6 +158,8 @@ class Movuino extends EventEmitter {
             if (suffix === '/wifi/state' && message.args.length > 0) {
               this.info.wifiState = message.args[0];
               this.emit('info', this.info);
+            } else if (suffix === '/wifi/set') {
+              this._updateInfoFromSerial(message.args);
             }
           }
         });
@@ -203,13 +206,15 @@ class Movuino extends EventEmitter {
         .then(() => { return this.serialRpc('/wifi/get'); })
         .then((credentials) => {
           ////////// if everything went well, emit all needed information and resolve
-          this.info.serialPortReady = true;
-          this.info.ssid = credentials[0];
-          this.info.password = credentials[1];
-          this.info.hostIP = credentials[2];
-          // this.emit('message', 'serial', { address: '/hello', args: info });
-          // this.emit('message', 'serial', { address: '/wifi/get', args: credentials });
-          this.emit('info', this.info);
+          // this.info.serialPortReady = true;
+          // this.info.ssid = credentials[0];
+          // this.info.password = credentials[1];
+          // this.info.hostIP = credentials[2];
+          // // this.emit('message', 'serial', { address: '/hello', args: info });
+          // // this.emit('message', 'serial', { address: '/wifi/get', args: credentials });
+          // this.emit('info', this.info);
+
+          this._updateInfoFromSerial(credentials);
           resolve();
         });
       });
@@ -256,6 +261,14 @@ class Movuino extends EventEmitter {
         resolve();
       }
     });   
+  }
+
+  _updateInfoFromSerial(credentials) {
+    this.info.serialPortReady = true;
+    this.info.ssid = credentials[0];
+    this.info.password = credentials[1];
+    this.info.hostIP = credentials[2];
+    this.emit('info', this.info);
   }
 
   //============================== METHODS ===================================//

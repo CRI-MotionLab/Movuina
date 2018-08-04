@@ -233,21 +233,23 @@ class Main extends Script {
             }
           }
 
+          const filename = `Movuino-recording-${Date.now()}`;
+
           remote.dialog.showSaveDialog({
-            defaultPath: `Movuino-recording-${Date.now()}.${ext}`,
-          }, (filename) => {
+            defaultPath: `${filename}.${ext}`,
+          }, (filepath) => {
             if (filename !== undefined) {
-              ipc.send('renderer', 'recording', {
+              ipc.send('controller', 'recording', {
                 data: recording,
                 formats: formats,
-                filename: filename
+                filename: filename,
+                filepath: filepath,
               });
             }
           });
         }
 
         this.setLightBox(false);
-
       });
 
       this.setLightBox(true);

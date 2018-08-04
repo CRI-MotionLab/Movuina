@@ -4,6 +4,7 @@ import url from 'url';
 
 import ejs from 'ejs';
 import fs from 'fs-extra';
+import jszip from 'jszip';
 
 import {
   screen,
@@ -17,6 +18,7 @@ import {
   getMyIP,
   stripMovuinoOSCPrefix,
   createExcelDocFromRecording,
+  createCsvDocFromRecording,
 } from './util';
 
 // this is just a copy of build/config/<used_config_name>.js
@@ -152,15 +154,53 @@ class ViewController extends EventEmitter {
           }
           break;
         case 'recording':
-          console.log('received recording : ' + JSON.stringify(arg, null, 2));
+          const buffers = {};
+          const promises = [];
 
           if (arg.formats.indexOf('excel') !== -1) {
-            createExcelDocFromRecording(arg.data).then((buffer) => {
-              if (arg.formats.length === 1) {
-                fs.writeFileSync(arg.filename, buffer);
-              }
-            });
+            promises.push(createExcelDocFromRecording(arg.data));
           }
+
+          if (arg.formats.indexOf('csv') !== -1) {
+            promises.push(createCsvDocFromRecording(arg.data));
+          }
+
+          Promise.all(promises)
+          .then((bufs) => {
+            if (arg.formats.indexOf('excel') !== -1) {
+              if (arg.formats.length === 1) {
+                fs.writeFileSync(`${arg.filepath}`, bufs[0]);              
+              } else {
+                buffers['xlsx'] = bufs[0];
+              }
+            }
+
+            if (arg.formats.indexOf('csv') !== -1) {
+              if (arg.formats.length === 1) {
+                fs.writeFileSync(`${arg.filepath}`, bufs[0]);              
+              } else {
+                buffers['csv'] = bufs[1];
+              }
+            }
+
+            if (arg.formats.length > 1) {
+              // create zip file from buffers
+              const zip = new jszip();
+
+              for (let ext in buffers) {
+                zip.file(`${arg.filename}.${ext}`, buffers[ext]);
+              }
+
+              zip
+              .generateNodeStream({ type: 'nodebuffer', streamFiles: true })
+              .pipe(fs.createWriteStream(`${arg.filepath}`))
+              .on('finish', function () {
+                // JSZip generates a readable stream with a "end" event,
+                // but is piped here in a writable stream which emits a "finish" event.
+                console.log("zip file created");
+              });
+            }
+          });
           break;
         default:
           break;
