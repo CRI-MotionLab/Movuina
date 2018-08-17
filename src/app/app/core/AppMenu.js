@@ -6,20 +6,20 @@ class AppMenu extends EventEmitter {
     super();
     this.menu = null;
     this.menuTemplate = [
-      // {
-      //   label: 'Edit',
-      //   submenu: [
-      //     {role: 'undo'},
-      //     {role: 'redo'},
-      //     {type: 'separator'},
-      //     {role: 'cut'},
-      //     {role: 'copy'},
-      //     {role: 'paste'},
-      //     {role: 'pasteandmatchstyle'},
-      //     {role: 'delete'},
-      //     {role: 'selectall'}
-      //   ]
-      // },
+      {
+        label: 'Edit',
+        submenu: [
+          // {role: 'undo'},
+          // {role: 'redo'},
+          // {type: 'separator'},
+          {role: 'cut'},
+          {role: 'copy'},
+          {role: 'paste'},
+          // {role: 'pasteandmatchstyle'},
+          // {role: 'delete'},
+          {role: 'selectall'}
+        ]
+      },
       {
         label: 'View',
         submenu: [
@@ -32,8 +32,8 @@ class AppMenu extends EventEmitter {
             id: 'toggle-osc-connections',
             label: 'Show OSC Connections',
             type: 'checkbox',
-            accelerator: 'CommandOrControl+C',
-            //click: () => { callbacks.toggleOSCConnection(this.menu); },
+            // accelerator: 'CommandOrControl+C',
+            // click: () => { callbacks.toggleOSCConnection(this.menu); },
             click: (item, BrowserWindow) => {
               this.emit('showOSCConnections', item.checked);
               // console.log(item.checked);
@@ -136,7 +136,7 @@ class AppMenu extends EventEmitter {
       // );
 
       // Window menu
-      this.menuTemplate[2].submenu = [
+      this.menuTemplate[3].submenu = [
         {role: 'close'},
         {role: 'minimize'},
         {role: 'zoom'},
