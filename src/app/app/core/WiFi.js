@@ -22,6 +22,14 @@ class WiFi extends EventEmitter {
     this.wifiConnectionTimeout = 500;
   }
 
+  emitWiFiConnections() {
+    const res = {};
+    this.lastUDPMessageDates.forEach((value, key, map) => {
+      res[key] = value.info.address;
+    });
+    this.emit('wifiConnections', res);
+  }
+
   startObservingOSCMessages() {
     return new Promise((resolve, reject) => {
       this.udpPort.on('error', (err) => { console.log(err.message); });
@@ -40,10 +48,13 @@ class WiFi extends EventEmitter {
           idIsNew = true;
         }
 
-        this.lastUDPMessageDates.set(parts.id, Date.now());
+        this.lastUDPMessageDates.set(parts.id, {
+          date: Date.now(),
+          info: info,
+        });
 
         if (idIsNew) {
-          this.emit('wifiConnections', Array.from(this.lastUDPMessageDates.keys()));
+          this.emitWiFiConnections();
         }
 
         this.udpPort.emit(`movuino-${parts.id}`, { address: address, args: args }, timeTag, info);
@@ -56,17 +67,14 @@ class WiFi extends EventEmitter {
         let connectionsChanged = false;
 
         this.lastUDPMessageDates.forEach((value, key, map) => {
-          if (now - value > this.wifiConnectionTimeout) {
+          if (now - value.date > this.wifiConnectionTimeout) {
             this.lastUDPMessageDates.delete(key);
             connectionsChanged = true;
           }
         });
 
         if (connectionsChanged) {
-          this.emit(
-            'wifiConnections',
-            Array.from(this.lastUDPMessageDates.keys())
-          );
+          this.emitWiFiConnections();
         }
       }, this.wifiConnectionTimeout * 0.5);
     });

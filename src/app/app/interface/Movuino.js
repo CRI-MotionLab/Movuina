@@ -16,6 +16,7 @@ class Movuino extends EventEmitter {
     this.info = null; // could be an array to maintain a multi-movuino state
 
     this.allowUpdateWiFiConnections = true;
+    this.wifiConnections = [];
     this.initialized = false;
   }
 
@@ -143,15 +144,21 @@ class Movuino extends EventEmitter {
     }
   }
 
-  updateWiFiConnections(wifiConnections) {
-    if (this.allowUpdateWiFiConnections) {
-      const state = this.info !== null
-                  ? (wifiConnections.indexOf(this.info.id) === -1 ? 0 : 1)
-                  : 0;
+  updateWiFiConnections(wifiConnections = null) {
+    this.wifiConnections = wifiConnections || this.wifiConnections;
+    console.log(this.wifiConnections);
 
-      // this.info.wifiState = state;
-      // console.log('movuino ' + (state === 1 ? 'dis' : '') + 'connected');
-      // this.info.wifiState = state;
+    if (this.allowUpdateWiFiConnections) {
+      let state = 0;
+
+      if (this.info !== null) {
+        const ip = this.wifiConnections[this.info.id];
+        if (ip !== undefined) {
+          state = 1;
+          this.setMovuinoIP(ip);
+        }
+      }
+
       this.setWiFiState(state);
     }
   }
@@ -167,7 +174,13 @@ class Movuino extends EventEmitter {
     this.setHostIP(this.info.hostIP);
     this.$movuinoId.value = this.info.id;
 
-    this.setWiFiState(this.info.wifiState);
+    // this.setWiFiState(this.info.wifiState);
+    if (this.info.wifiState != 1) {
+      this.setWiFiState(this.info.wifiState);
+    } else {
+      this.updateWiFiConnections()
+    }
+
     this.setMovuinoIP(this.info.movuinoIP);
   }
 

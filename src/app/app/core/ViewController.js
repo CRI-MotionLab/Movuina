@@ -142,17 +142,20 @@ class ViewController extends EventEmitter {
           this.emit('devices', 'getWiFiConnections');
           this.emit('loaded');
           break;
+
         case 'render': // this allows to trig a proper reloading of the page
           if (this.window !== null) {
             this.render();
           }
           break;
+
         case 'getMyIP':
           const ip = getMyIP();
           if (ip !== null) {
             this.send('controller', 'getMyIP', ip);
           }
           break;
+          
         case 'recording':
           const buffers = {};
           const promises = [];

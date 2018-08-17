@@ -167,6 +167,7 @@ class Devices extends EventEmitter {
   }
 
   _updateWiFiConnections(wifiConnections = null) {
+    // console.log('wifi connections changed : ' + JSON.stringify(wifiConnections));
     this.wifiConnections = wifiConnections || this.wifiConnections;
     this.emit('controller', 'wifiConnections', this.wifiConnections);
   }

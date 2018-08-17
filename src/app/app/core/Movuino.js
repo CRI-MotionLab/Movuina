@@ -120,7 +120,7 @@ class Movuino extends EventEmitter {
     }
 
     if (message.medium === 'serial' && this.info.serialPortReady) {
-      console.log(JSON.stringify(message, null, 2));
+      // console.log(JSON.stringify(message, null, 2));
       this.serialPort.send(msg);
     } else if (message.medium === 'wifi' && this.info.udpPortReady) {
       this.udpPort.send(msg, this.info.movuinoIP, this.outputUDPPort);
