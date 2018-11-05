@@ -31,7 +31,7 @@ function stopTwirling() {
   if (cnt === 0) {
     if (daemon !== null) {
       clearInterval(daemon);
-      process.stdout.write("\r");
+      setTimeout(function() { process.stdout.write("\r"); }, 10);
       daemon = null;
     }
   }

@@ -1,4 +1,3 @@
-const http = require('http');
 const childProcess = require('child_process');
 const logger = require('./logger');
 
@@ -8,11 +7,14 @@ function App(appIndexPath, config) {
   this.appIndexPath = appIndexPath;
   this.app = null;
   this.config = config;
+  this.start = start.bind(this);
+  this.stop = stop.bind(this);
+  this.restart = restart.bind(this);
 };
 
-App.prototype.start = function() {
-  const task = 'starting app';
-  logger.notifyAppTask(task);
+// App.prototype.start = function() {
+const start = function() {
+  logger.notifyAppTask('starting app');
 
   let electron;
   switch (process.platform) {
@@ -35,7 +37,8 @@ App.prototype.start = function() {
   });
 };
 
-App.prototype.stop = function() {
+// App.prototype.stop = function() {
+const stop = function() {
   return new Promise((resolve, reject) => {
     if (this.app !== null) {
       logger.notifyAppTask('closing app');
@@ -50,7 +53,8 @@ App.prototype.stop = function() {
   });
 };
 
-App.prototype.restart = function() {
+// App.prototype.restart = function() {
+const restart = function() {
   this.stop()
   .then(() => {
     this.start();
