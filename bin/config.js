@@ -1,6 +1,6 @@
 const config = {
   app: {
-    name: 'Movuini',
+    name: 'Movuina',
   },
 
   src: 'src',
