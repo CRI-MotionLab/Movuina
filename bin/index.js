@@ -177,8 +177,8 @@ function createWindowsInstaller() {
         exe: 'Movuina.exe',
         iconUrl: 'https://raw.githubusercontent.com/CRI-MotionLab/Movuina/master/assets/movuino.ico',
         setupExe: 'MovuinaSetup.exe',
-        setupIcon: path.join(paths.assetsSrc, 'movuino.ico'),
-        loadingGif: path.join(paths.assetsSrc, 'movuino.gif'),
+        setupIcon: path.join(config.assetsSrc, 'movuino.ico'),
+        loadingGif: path.join(config.assetsSrc, 'movuino.gif'),
         noMsi: true,
       })
       .then(() => {
