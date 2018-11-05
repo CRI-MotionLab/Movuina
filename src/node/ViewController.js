@@ -36,7 +36,6 @@ class ViewController extends EventEmitter {
 
   deleteWindow() {
     if (this.window !== null) {
-      store.setMainWindow(null);
       this.window.removeAllListeners('close');
       this.window = null;
     }
