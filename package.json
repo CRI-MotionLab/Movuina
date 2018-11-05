@@ -1,6 +1,6 @@
 {
   "name": "Movuina",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Middleware application for Movuino sensors and Streamo mobile app",
   "main": "dist/main.js",
   "scripts": {
