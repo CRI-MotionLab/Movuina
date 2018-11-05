@@ -1,3 +1,0 @@
-# Movuina
-
-#### TODO: write documentation

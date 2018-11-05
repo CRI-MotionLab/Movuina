@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>
+    Movuina
+  </title>
+  <link rel="stylesheet" type="text/css" href="css/index.css">
+</head>
+<body>
+  <div id="main-wrapper">
+    <main-component :child-ready="parentReady"></main-component>
+  </div>
+
+  <script type="text/javascript"> const electron = require('electron'); </script>
+  <script type="text/javascript" src="js/index.js"></script>
+  <!-- this might work someday with a correct .vue transpiler but for now there isn't one around ... -->
+  <!-- ... so we need to use vueify while browserifying and expose electron globally like above -->
+  <!-- <script type="text/javascript"> require('./js/index.js'); </script> -->
+</body>
+</html>

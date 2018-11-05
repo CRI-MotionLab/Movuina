@@ -1,0 +1,89 @@
+// see :
+// https://css-tricks.com/making-pure-css-playpause-button/
+
+$btnSize: 30px;
+$iconHeight: ($btnSize / 2) * 1.1; // 22px;
+$iconWidth: 5 * $iconHeight / 6;
+$iconHeightMinusWidth: $iconHeight - $iconWidth;
+
+$halfBtnSize: $btnSize / 2;
+$halfIconHeight: $iconHeight / 2;
+$halfIconWidth: $iconWidth / 2;
+$halfIconHeightMinusWidth: $iconHeightMinusWidth / 2;
+
+$btnBgColor: $lightGrey;
+$btnBgBlinkColor: #f99;
+$btnFgColor: #000;
+
+.button {
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: $btnSize;
+  height: $btnSize;
+  background-color: $btnBgColor;
+  border-radius: $btnSize;
+  cursor: pointer;
+
+  &.stop {
+    animation: glowing-background 1500ms infinite;
+  }
+}
+
+.button:after {
+  content: '';
+  display: inline-block;
+  box-sizing: border-box;
+  width: $halfIconWidth;
+  height: $iconHeight;
+  border-color: transparent transparent transparent $btnFgColor;
+  margin-top: $halfBtnSize - $halfIconHeight;
+  transition: all 50ms ease !important;
+}
+
+.button.play:after {
+  margin-left: $iconWidth / 5;
+  border-style: solid;
+  border-width: $halfIconHeight 0 $halfIconHeight $iconWidth;
+}
+
+.button.pause:after {
+  margin-left: 0px;
+  border-style: double;
+  border-width: 0px 0 0px $iconWidth;
+}
+
+.button.record:after {
+  width: $iconHeight;
+  height: $iconHeight;
+  margin-top: $halfBtnSize - $halfIconHeight;
+  border: 0;
+  border-radius: $iconHeight;
+  background-color: #f00;
+}
+
+$stopSmallFactor: 0.9;
+$stopBorderSize: $iconHeight * (1 - $stopSmallFactor);
+
+.button.stop:after {
+  width: $iconHeight;
+  height: $iconHeight;
+  margin-top: $halfBtnSize - $halfIconHeight;
+  border: $stopBorderSize solid;
+  border-radius: 0;
+  background-color: $btnFgColor;
+
+  animation: glowing-border 1500ms infinite;
+}
+
+@keyframes glowing-background {
+  0% { background-color: $btnBgColor; }
+  50% { background-color: $btnBgBlinkColor; }
+  100% { background-color: $btnBgColor; }
+}
+
+@keyframes glowing-border {
+  0% { border-color: $btnBgColor; }
+  50% { border-color: $btnBgBlinkColor; }
+  100% { border-color: $btnBgColor; }
+}
