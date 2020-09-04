@@ -21,7 +21,7 @@
     "jszip": "^3.1.5",
     "lfo-motion": "github:ircam-rnd/lfo-motion",
     "mano-js": "github:ircam-rnd/mano-js",
-    "node-sass": "^4.9.3",
+    "node-sass": "^4.13.1",
     "osc": "^2.2.4",
     "rapid-mix-adapters": "github:ircam-rnd/rapid-mix-adapters",
     "serialport": "^6.2.2",
