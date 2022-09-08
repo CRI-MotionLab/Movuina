@@ -18,7 +18,7 @@
     "electron-squirrel-startup": "^1.0.0",
     "excel4node": "^1.6.0",
     "fs-extra": "^7.0.0",
-    "jszip": "^3.1.5",
+    "jszip": "^3.7.0",
     "lfo-motion": "github:ircam-rnd/lfo-motion",
     "mano-js": "github:ircam-rnd/mano-js",
     "node-sass": "^4.9.3",
