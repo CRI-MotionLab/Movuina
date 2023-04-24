@@ -36,7 +36,7 @@
     "babelify": "^8.0.0",
     "browserify": "^16.2.2",
     "electron": "^2.0.11",
-    "electron-packager": "^12.1.2",
+    "electron-packager": "^17.1.1",
     "electron-rebuild": "^1.8.2",
     "electron-winstaller": "^2.6.4",
     "klaw": "^3.0.0",
